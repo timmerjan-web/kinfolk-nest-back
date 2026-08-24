@@ -5,10 +5,12 @@ import { toast } from "sonner";
 import { AppShell, SectionCard } from "@/components/app-shell";
 import { RequireGezin } from "@/components/require-auth";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useAuth, type Rol } from "@/lib/auth";
 import { maakUitnodigingAan } from "@/lib/household";
 import { supabase } from "@/integrations/supabase/client";
 import { foutTekst } from "@/lib/errors";
+import { formatteerVerjaardag } from "@/lib/verjaardagen";
 
 export const Route = createFileRoute("/gezin")({
   head: () => ({ meta: [{ title: "Gezin — Gezinsapp" }] }),
@@ -19,21 +21,23 @@ export const Route = createFileRoute("/gezin")({
   ),
 });
 
-type Lid = { id: string; naam: string; rol: Rol };
+type Lid = { id: string; naam: string; rol: Rol; geboortedatum: string | null };
 
 function GezinPage() {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const [leden, setLeden] = useState<Lid[]>([]);
   const [gezinNaam, setGezinNaam] = useState<string>("");
   const [genererend, setGenererend] = useState<Rol | null>(null);
   const [laatsteCode, setLaatsteCode] = useState<{ code: string; rol: Rol } | null>(null);
+  const [eigenGeboortedatum, setEigenGeboortedatum] = useState("");
+  const [opslaanBezig, setOpslaanBezig] = useState(false);
 
   const laadGezin = useCallback(async () => {
     if (!profile?.gezin_id) return;
     const [{ data: ledenData }, { data: gezinData }] = await Promise.all([
       supabase
         .from("profiles")
-        .select("id, naam, rol")
+        .select("id, naam, rol, geboortedatum")
         .eq("gezin_id", profile.gezin_id)
         .order("naam"),
       supabase.from("gezinnen").select("naam").eq("id", profile.gezin_id).maybeSingle(),
@@ -45,6 +49,29 @@ function GezinPage() {
   useEffect(() => {
     void laadGezin();
   }, [laadGezin]);
+
+  useEffect(() => {
+    const eigen = leden.find((l) => l.id === user?.id);
+    setEigenGeboortedatum(eigen?.geboortedatum ?? "");
+  }, [leden, user?.id]);
+
+  const opslaanVerjaardag = async () => {
+    if (!user) return;
+    setOpslaanBezig(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ geboortedatum: eigenGeboortedatum || null })
+        .eq("id", user.id);
+      if (error) throw error;
+      toast.success("Verjaardag opgeslagen.");
+      void laadGezin();
+    } catch (err) {
+      toast.error(foutTekst(err, "Opslaan mislukt."));
+    } finally {
+      setOpslaanBezig(false);
+    }
+  };
 
   const nodigUit = async (rol: Rol) => {
     setGenererend(rol);
@@ -77,14 +104,37 @@ function GezinPage() {
         </h2>
         <ul className="space-y-2">
           {leden.map((lid) => (
-            <li
-              key={lid.id}
-              className="flex items-center justify-between rounded-lg border border-border px-3 py-2"
-            >
-              <span className="text-sm font-medium">{lid.naam}</span>
-              <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase text-muted-foreground">
-                {lid.rol}
-              </span>
+            <li key={lid.id} className="rounded-lg border border-border px-3 py-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">{lid.naam}</span>
+                <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase text-muted-foreground">
+                  {lid.rol}
+                </span>
+              </div>
+              {lid.id === user?.id ? (
+                <div className="mt-2 flex items-center gap-2">
+                  <Input
+                    type="date"
+                    value={eigenGeboortedatum}
+                    onChange={(e) => setEigenGeboortedatum(e.target.value)}
+                    className="h-8 flex-1 text-xs"
+                  />
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    disabled={opslaanBezig}
+                    onClick={() => void opslaanVerjaardag()}
+                  >
+                    Opslaan
+                  </Button>
+                </div>
+              ) : (
+                lid.geboortedatum && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Verjaardag: {formatteerVerjaardag(lid.geboortedatum)}
+                  </p>
+                )
+              )}
             </li>
           ))}
         </ul>

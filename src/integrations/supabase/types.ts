@@ -220,6 +220,7 @@ export type Database = {
           avatar_initial: string | null
           created_at: string
           gezin_id: string | null
+          geboortedatum: string | null
           id: string
           naam: string
           rol: Database["public"]["Enums"]["app_rol"]
@@ -228,6 +229,7 @@ export type Database = {
           avatar_initial?: string | null
           created_at?: string
           gezin_id?: string | null
+          geboortedatum?: string | null
           id: string
           naam: string
           rol?: Database["public"]["Enums"]["app_rol"]
@@ -236,6 +238,7 @@ export type Database = {
           avatar_initial?: string | null
           created_at?: string
           gezin_id?: string | null
+          geboortedatum?: string | null
           id?: string
           naam?: string
           rol?: Database["public"]["Enums"]["app_rol"]
