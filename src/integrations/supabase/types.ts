@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      agenda_items: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          datum: string
+          gezin_id: string
+          id: string
+          notitie: string | null
+          tijd: string | null
+          titel: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          datum: string
+          gezin_id: string
+          id?: string
+          notitie?: string | null
+          tijd?: string | null
+          titel: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          datum?: string
+          gezin_id?: string
+          id?: string
+          notitie?: string | null
+          tijd?: string | null
+          titel?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agenda_items_gezin_id_fkey"
+            columns: ["gezin_id"]
+            isOneToOne: false
+            referencedRelation: "gezinnen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       boodschappen_items: {
         Row: {
           afgevinkt: boolean

@@ -1,5 +1,14 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { Home, ChefHat, CalendarDays, ShoppingCart, ListChecks, Users, LogOut } from "lucide-react";
+import {
+  Home,
+  ChefHat,
+  CalendarDays,
+  ShoppingCart,
+  ListChecks,
+  CalendarClock,
+  Users,
+  LogOut,
+} from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { GezinsappLogo } from "./logo";
 import { useAuth } from "@/lib/auth";
@@ -10,6 +19,7 @@ const primaryNav = [
   { to: "/weekmenu", label: "Weekmenu", icon: CalendarDays },
   { to: "/boodschappen", label: "Boodschappen", icon: ShoppingCart },
   { to: "/klusjes", label: "Klusjes", icon: ListChecks },
+  { to: "/agenda", label: "Agenda", icon: CalendarClock },
   { to: "/gezin", label: "Gezin", icon: Users },
 ] as const;
 
