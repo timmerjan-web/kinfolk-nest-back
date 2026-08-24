@@ -62,6 +62,56 @@ export type Database = {
           },
         ]
       }
+      klusjes: {
+        Row: {
+          afgerond: boolean
+          afgerond_door: string | null
+          afgerond_op: string | null
+          created_at: string
+          created_by: string | null
+          deadline: string | null
+          gezin_id: string
+          id: string
+          titel: string
+          toegewezen_aan: string | null
+          updated_at: string
+        }
+        Insert: {
+          afgerond?: boolean
+          afgerond_door?: string | null
+          afgerond_op?: string | null
+          created_at?: string
+          created_by?: string | null
+          deadline?: string | null
+          gezin_id: string
+          id?: string
+          titel: string
+          toegewezen_aan?: string | null
+          updated_at?: string
+        }
+        Update: {
+          afgerond?: boolean
+          afgerond_door?: string | null
+          afgerond_op?: string | null
+          created_at?: string
+          created_by?: string | null
+          deadline?: string | null
+          gezin_id?: string
+          id?: string
+          titel?: string
+          toegewezen_aan?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "klusjes_gezin_id_fkey"
+            columns: ["gezin_id"]
+            isOneToOne: false
+            referencedRelation: "gezinnen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gezin_uitnodigingen: {
         Row: {
           code: string
