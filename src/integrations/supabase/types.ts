@@ -14,16 +14,119 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      gezin_uitnodigingen: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string
+          gebruikt_door: string | null
+          gebruikt_op: string | null
+          gezin_id: string
+          id: string
+          rol: Database["public"]["Enums"]["app_rol"]
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by: string
+          gebruikt_door?: string | null
+          gebruikt_op?: string | null
+          gezin_id: string
+          id?: string
+          rol: Database["public"]["Enums"]["app_rol"]
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string
+          gebruikt_door?: string | null
+          gebruikt_op?: string | null
+          gezin_id?: string
+          id?: string
+          rol?: Database["public"]["Enums"]["app_rol"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gezin_uitnodigingen_gezin_id_fkey"
+            columns: ["gezin_id"]
+            isOneToOne: false
+            referencedRelation: "gezinnen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gezinnen: {
+        Row: {
+          created_at: string
+          id: string
+          naam: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          naam: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          naam?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_initial: string | null
+          created_at: string
+          gezin_id: string | null
+          id: string
+          naam: string
+          rol: Database["public"]["Enums"]["app_rol"]
+        }
+        Insert: {
+          avatar_initial?: string | null
+          created_at?: string
+          gezin_id?: string | null
+          id: string
+          naam: string
+          rol?: Database["public"]["Enums"]["app_rol"]
+        }
+        Update: {
+          avatar_initial?: string | null
+          created_at?: string
+          gezin_id?: string | null
+          id?: string
+          naam?: string
+          rol?: Database["public"]["Enums"]["app_rol"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_gezin_id_fkey"
+            columns: ["gezin_id"]
+            isOneToOne: false
+            referencedRelation: "gezinnen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      current_gezin_id: { Args: never; Returns: string }
+      current_rol: {
+        Args: never
+        Returns: Database["public"]["Enums"]["app_rol"]
+      }
+      gezin_aanmaken: { Args: { p_naam: string }; Returns: string }
+      gezin_lid_worden: { Args: { p_code: string }; Returns: undefined }
+      gezin_uitnodiging_aanmaken: {
+        Args: { p_rol: Database["public"]["Enums"]["app_rol"] }
+        Returns: string
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_rol: "ouder" | "kind"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +253,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_rol: ["ouder", "kind"],
+    },
   },
 } as const
