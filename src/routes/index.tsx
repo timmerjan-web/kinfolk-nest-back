@@ -1,40 +1,33 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { AppShell, SectionCard } from "@/components/app-shell";
+import { RequireGezin } from "@/components/require-auth";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Gezinsapp — backend klaar" },
-      {
-        name: "description",
-        content:
-          "Backend van de gezinsapp: database met gezinnen, profielen en uitnodigingen, plus e-mail- en Google-login.",
-      },
-      { property: "og:title", content: "Gezinsapp — backend klaar" },
-      {
-        property: "og:description",
-        content:
-          "Backend van de gezinsapp: database met gezinnen, profielen en uitnodigingen, plus e-mail- en Google-login.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
-  component: Index,
+  head: () => ({ meta: [{ title: "Vandaag — Gezinsapp" }] }),
+  component: () => (
+    <RequireGezin>
+      <TodayPage />
+    </RequireGezin>
+  ),
 });
 
-function Index() {
+function TodayPage() {
+  const { profile } = useAuth();
+  const uur = new Date().getHours();
+  const groet = uur < 12 ? "Goedemorgen" : uur < 18 ? "Goedemiddag" : "Goedenavond";
+
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-6">
-      <div className="max-w-md text-center">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          Gezinsapp
-        </h1>
-        <p className="mt-3 text-sm text-muted-foreground">
-          De backend staat klaar: gezinnen, profielen met rol (ouder/kind) en
-          uitnodigingscodes, met e-mail- en Google-login. De frontend bouw je hier
-          bovenop.
+    <AppShell title="Vandaag" subtitle={profile?.naam ? `${groet}, ${profile.naam}` : groet}>
+      <SectionCard className="text-center">
+        <p className="text-sm text-muted-foreground">
+          Dit wordt het dagoverzicht: het weekmenu van vandaag, wie er kookt, klusjes met deadline
+          vandaag, verjaardagen binnen de marge en de afspraken van vandaag.
         </p>
-      </div>
-    </main>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Komt in Fase 7, zodra recepten, weekmenu, klusjes en agenda gebouwd zijn.
+        </p>
+      </SectionCard>
+    </AppShell>
   );
 }
