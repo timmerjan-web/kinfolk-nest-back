@@ -10,33 +10,141 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as GezinRouteImport } from './routes/gezin'
+import { Route as KlusjesRouteImport } from './routes/klusjes'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as WeekmenuRouteImport } from './routes/weekmenu'
+import { Route as ReceptenIndexRouteImport } from './routes/recepten/index'
+import { Route as ReceptenReceptIdRouteImport } from './routes/recepten/$receptId'
+import { Route as ReceptenNieuwRouteImport } from './routes/recepten/nieuw'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GezinRoute = GezinRouteImport.update({
+  id: '/gezin',
+  path: '/gezin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KlusjesRoute = KlusjesRouteImport.update({
+  id: '/klusjes',
+  path: '/klusjes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WeekmenuRoute = WeekmenuRouteImport.update({
+  id: '/weekmenu',
+  path: '/weekmenu',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReceptenIndexRoute = ReceptenIndexRouteImport.update({
+  id: '/recepten/',
+  path: '/recepten/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReceptenReceptIdRoute = ReceptenReceptIdRouteImport.update({
+  id: '/recepten/$receptId',
+  path: '/recepten/$receptId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReceptenNieuwRoute = ReceptenNieuwRouteImport.update({
+  id: '/recepten/nieuw',
+  path: '/recepten/nieuw',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/gezin': typeof GezinRoute
+  '/klusjes': typeof KlusjesRoute
+  '/onboarding': typeof OnboardingRoute
+  '/weekmenu': typeof WeekmenuRoute
+  '/recepten/$receptId': typeof ReceptenReceptIdRoute
+  '/recepten/nieuw': typeof ReceptenNieuwRoute
+  '/recepten/': typeof ReceptenIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/gezin': typeof GezinRoute
+  '/klusjes': typeof KlusjesRoute
+  '/onboarding': typeof OnboardingRoute
+  '/weekmenu': typeof WeekmenuRoute
+  '/recepten/$receptId': typeof ReceptenReceptIdRoute
+  '/recepten/nieuw': typeof ReceptenNieuwRoute
+  '/recepten': typeof ReceptenIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/gezin': typeof GezinRoute
+  '/klusjes': typeof KlusjesRoute
+  '/onboarding': typeof OnboardingRoute
+  '/weekmenu': typeof WeekmenuRoute
+  '/recepten/$receptId': typeof ReceptenReceptIdRoute
+  '/recepten/nieuw': typeof ReceptenNieuwRoute
+  '/recepten/': typeof ReceptenIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/gezin'
+    | '/klusjes'
+    | '/onboarding'
+    | '/weekmenu'
+    | '/recepten/$receptId'
+    | '/recepten/nieuw'
+    | '/recepten/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/gezin'
+    | '/klusjes'
+    | '/onboarding'
+    | '/weekmenu'
+    | '/recepten/$receptId'
+    | '/recepten/nieuw'
+    | '/recepten'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/gezin'
+    | '/klusjes'
+    | '/onboarding'
+    | '/weekmenu'
+    | '/recepten/$receptId'
+    | '/recepten/nieuw'
+    | '/recepten/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
+  GezinRoute: typeof GezinRoute
+  KlusjesRoute: typeof KlusjesRoute
+  OnboardingRoute: typeof OnboardingRoute
+  WeekmenuRoute: typeof WeekmenuRoute
+  ReceptenReceptIdRoute: typeof ReceptenReceptIdRoute
+  ReceptenNieuwRoute: typeof ReceptenNieuwRoute
+  ReceptenIndexRoute: typeof ReceptenIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +156,75 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gezin': {
+      id: '/gezin'
+      path: '/gezin'
+      fullPath: '/gezin'
+      preLoaderRoute: typeof GezinRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/klusjes': {
+      id: '/klusjes'
+      path: '/klusjes'
+      fullPath: '/klusjes'
+      preLoaderRoute: typeof KlusjesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/weekmenu': {
+      id: '/weekmenu'
+      path: '/weekmenu'
+      fullPath: '/weekmenu'
+      preLoaderRoute: typeof WeekmenuRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recepten/': {
+      id: '/recepten/'
+      path: '/recepten'
+      fullPath: '/recepten/'
+      preLoaderRoute: typeof ReceptenIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recepten/$receptId': {
+      id: '/recepten/$receptId'
+      path: '/recepten/$receptId'
+      fullPath: '/recepten/$receptId'
+      preLoaderRoute: typeof ReceptenReceptIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recepten/nieuw': {
+      id: '/recepten/nieuw'
+      path: '/recepten/nieuw'
+      fullPath: '/recepten/nieuw'
+      preLoaderRoute: typeof ReceptenNieuwRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
+  GezinRoute: GezinRoute,
+  KlusjesRoute: KlusjesRoute,
+  OnboardingRoute: OnboardingRoute,
+  WeekmenuRoute: WeekmenuRoute,
+  ReceptenReceptIdRoute: ReceptenReceptIdRoute,
+  ReceptenNieuwRoute: ReceptenNieuwRoute,
+  ReceptenIndexRoute: ReceptenIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

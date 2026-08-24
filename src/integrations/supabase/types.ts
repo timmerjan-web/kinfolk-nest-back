@@ -108,56 +108,6 @@ export type Database = {
           },
         ]
       }
-      recepten: {
-        Row: {
-          beschrijving: string | null
-          bereidingstijd_minuten: number | null
-          created_at: string
-          created_by: string | null
-          gezin_id: string
-          id: string
-          ingredienten: string[]
-          instructies: string | null
-          porties: number | null
-          titel: string
-          updated_at: string
-        }
-        Insert: {
-          beschrijving?: string | null
-          bereidingstijd_minuten?: number | null
-          created_at?: string
-          created_by?: string | null
-          gezin_id: string
-          id?: string
-          ingredienten?: string[]
-          instructies?: string | null
-          porties?: number | null
-          titel: string
-          updated_at?: string
-        }
-        Update: {
-          beschrijving?: string | null
-          bereidingstijd_minuten?: number | null
-          created_at?: string
-          created_by?: string | null
-          gezin_id?: string
-          id?: string
-          ingredienten?: string[]
-          instructies?: string | null
-          porties?: number | null
-          titel?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "recepten_gezin_id_fkey"
-            columns: ["gezin_id"]
-            isOneToOne: false
-            referencedRelation: "gezinnen"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       [_ in never]: never
