@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { GezinsappLogo } from "@/components/logo";
@@ -59,6 +59,8 @@ function OnboardingPage() {
       setBusy(false);
     }
   };
+
+  if (profile?.gezin_id) return <Navigate to="/" replace />;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4 text-foreground">
