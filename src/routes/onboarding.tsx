@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { GezinsappLogo } from "@/components/logo";
@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth";
 import { maakGezinAan, wordGezinslid } from "@/lib/household";
+import { foutTekst } from "@/lib/errors";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({ meta: [{ title: "Gezin — Gezinsapp" }] }),
@@ -20,7 +21,7 @@ export const Route = createFileRoute("/onboarding")({
 
 function OnboardingPage() {
   const navigate = useNavigate();
-  const { refreshProfile } = useAuth();
+  const { profile, refreshProfile } = useAuth();
   const [tab, setTab] = useState<"maken" | "aansluiten">("maken");
   const [naam, setNaam] = useState("");
   const [code, setCode] = useState("");
@@ -37,7 +38,7 @@ function OnboardingPage() {
       toast.success(`Gezin "${naam}" aangemaakt.`);
       navigate({ to: "/", replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(foutTekst(err));
     } finally {
       setBusy(false);
     }
@@ -53,11 +54,13 @@ function OnboardingPage() {
       toast.success("Je bent aangesloten bij het gezin.");
       navigate({ to: "/", replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(foutTekst(err));
     } finally {
       setBusy(false);
     }
   };
+
+  if (profile?.gezin_id) return <Navigate to="/" replace />;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4 text-foreground">

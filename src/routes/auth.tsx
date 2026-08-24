@@ -6,6 +6,7 @@ import { GezinsappLogo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { foutTekst } from "@/lib/errors";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [{ title: "Inloggen — Gezinsapp" }] }),
@@ -51,7 +52,7 @@ function AuthPage() {
         if (error) throw error;
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(foutTekst(err));
     } finally {
       setBusy(false);
     }

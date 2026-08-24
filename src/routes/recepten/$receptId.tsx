@@ -7,6 +7,7 @@ import { RequireGezin } from "@/components/require-auth";
 import { ReceptForm } from "@/components/recept-form";
 import { Button } from "@/components/ui/button";
 import { deleteRecept, getRecept, updateRecept, type Recept, type ReceptInvoer } from "@/lib/recepten";
+import { foutTekst } from "@/lib/errors";
 
 export const Route = createFileRoute("/recepten/$receptId")({
   head: () => ({ meta: [{ title: "Recept — Gezinsapp" }] }),
@@ -27,7 +28,7 @@ function ReceptDetailPage() {
   useEffect(() => {
     getRecept(receptId)
       .then(setRecept)
-      .catch((err) => toast.error(err instanceof Error ? err.message : "Recept laden mislukt."));
+      .catch((err) => toast.error(foutTekst(err, "Recept laden mislukt.")));
   }, [receptId]);
 
   const bijwerken = async (invoer: ReceptInvoer) => {
@@ -38,7 +39,7 @@ function ReceptDetailPage() {
       setBewerken(false);
       toast.success("Recept bijgewerkt.");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Recept bijwerken mislukt.");
+      toast.error(foutTekst(err, "Recept bijwerken mislukt."));
     } finally {
       setBezig(false);
     }
@@ -53,7 +54,7 @@ function ReceptDetailPage() {
       toast.success("Recept verwijderd.");
       navigate({ to: "/recepten", replace: true });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Recept verwijderen mislukt.");
+      toast.error(foutTekst(err, "Recept verwijderen mislukt."));
       setBezig(false);
     }
   };

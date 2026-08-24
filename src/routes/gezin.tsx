@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth, type Rol } from "@/lib/auth";
 import { maakUitnodigingAan } from "@/lib/household";
 import { supabase } from "@/integrations/supabase/client";
+import { foutTekst } from "@/lib/errors";
 
 export const Route = createFileRoute("/gezin")({
   head: () => ({ meta: [{ title: "Gezin — Gezinsapp" }] }),
@@ -51,7 +52,7 @@ function GezinPage() {
       const code = await maakUitnodigingAan(rol);
       setLaatsteCode({ code, rol });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Uitnodiging maken mislukt.");
+      toast.error(foutTekst(err, "Uitnodiging maken mislukt."));
     } finally {
       setGenererend(null);
     }
