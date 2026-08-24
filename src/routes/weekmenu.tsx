@@ -49,7 +49,7 @@ function WeekmenuPage() {
   const [bezig, setBezig] = useState(false);
 
   const dagen = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-  const eindDatum = dagen[6];
+  const eindDatum = dagen[6] ?? weekStart;
 
   useEffect(() => {
     setItems(null);
