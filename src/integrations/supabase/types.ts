@@ -158,6 +158,60 @@ export type Database = {
           },
         ]
       }
+      weekmenu_items: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          datum: string
+          gezin_id: string
+          id: string
+          kok: string | null
+          notitie: string | null
+          recept_id: string | null
+          titel: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          datum: string
+          gezin_id: string
+          id?: string
+          kok?: string | null
+          notitie?: string | null
+          recept_id?: string | null
+          titel: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          datum?: string
+          gezin_id?: string
+          id?: string
+          kok?: string | null
+          notitie?: string | null
+          recept_id?: string | null
+          titel?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekmenu_items_gezin_id_fkey"
+            columns: ["gezin_id"]
+            isOneToOne: false
+            referencedRelation: "gezinnen"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "weekmenu_items_recept_id_fkey"
+            columns: ["recept_id"]
+            isOneToOne: false
+            referencedRelation: "recepten"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
