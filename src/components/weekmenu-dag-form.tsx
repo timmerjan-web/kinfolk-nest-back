@@ -17,13 +17,13 @@ export function WeekmenuDagForm({
   onAnnuleren,
   onVerwijderen,
 }: {
-  initieel?: Partial<WeekmenuInvoer>;
+  initieel?: Partial<WeekmenuInvoer> | undefined;
   leden: { id: string; naam: string }[];
   recepten: { id: string; titel: string }[];
   bezig: boolean;
   onOpslaan: (invoer: WeekmenuInvoer) => void | Promise<void>;
   onAnnuleren: () => void;
-  onVerwijderen?: () => void | Promise<void>;
+  onVerwijderen?: (() => void | Promise<void>) | undefined;
 }) {
   const [receptId, setReceptId] = useState(initieel?.recept_id ?? "");
   const [titel, setTitel] = useState(initieel?.titel ?? "");
