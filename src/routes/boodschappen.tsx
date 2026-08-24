@@ -7,7 +7,7 @@ import { RequireGezin } from "@/components/require-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth";
-import { getErrorMessage } from "@/lib/errors";
+import { foutTekst } from "@/lib/errors";
 import {
   addItem,
   deleteItem,
@@ -38,7 +38,7 @@ function BoodschappenPage() {
   const laad = useCallback(() => {
     listBoodschappen()
       .then(setItems)
-      .catch((err) => toast.error(getErrorMessage(err, "Boodschappenlijst laden mislukt.")));
+      .catch((err) => toast.error(foutTekst(err, "Boodschappenlijst laden mislukt.")));
   }, []);
 
   useEffect(() => {
@@ -54,7 +54,7 @@ function BoodschappenPage() {
       setItems((huidig) => [...(huidig ?? []), item]);
       setNieuweNaam("");
     } catch (err) {
-      toast.error(getErrorMessage(err, "Item toevoegen mislukt."));
+      toast.error(foutTekst(err, "Item toevoegen mislukt."));
     } finally {
       setBezig(false);
     }
@@ -68,7 +68,7 @@ function BoodschappenPage() {
     try {
       await toggleAfgevinkt(item.id, nieuw);
     } catch (err) {
-      toast.error(getErrorMessage(err, "Bijwerken mislukt."));
+      toast.error(foutTekst(err, "Bijwerken mislukt."));
       setItems((huidig) =>
         (huidig ?? []).map((i) => (i.id === item.id ? { ...i, afgevinkt: !nieuw } : i)),
       );
@@ -80,7 +80,7 @@ function BoodschappenPage() {
     try {
       await deleteItem(item.id);
     } catch (err) {
-      toast.error(getErrorMessage(err, "Verwijderen mislukt."));
+      toast.error(foutTekst(err, "Verwijderen mislukt."));
       laad();
     }
   };
@@ -91,7 +91,7 @@ function BoodschappenPage() {
       await verwijderAfgevinkt();
       setItems((huidig) => (huidig ?? []).filter((i) => !i.afgevinkt));
     } catch (err) {
-      toast.error(getErrorMessage(err, "Wissen mislukt."));
+      toast.error(foutTekst(err, "Wissen mislukt."));
     } finally {
       setBezig(false);
     }
@@ -116,7 +116,7 @@ function BoodschappenPage() {
       }
       laad();
     } catch (err) {
-      toast.error(getErrorMessage(err, "Genereren mislukt."));
+      toast.error(foutTekst(err, "Genereren mislukt."));
     } finally {
       setGenererend(false);
     }

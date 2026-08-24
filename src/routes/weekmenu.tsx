@@ -7,7 +7,7 @@ import { RequireGezin } from "@/components/require-auth";
 import { WeekmenuDagForm } from "@/components/weekmenu-dag-form";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
-import { getErrorMessage } from "@/lib/errors";
+import { foutTekst } from "@/lib/errors";
 import {
   addDays,
   createDag,
@@ -56,7 +56,7 @@ function WeekmenuPage() {
     const eind = addDays(weekStart, 6);
     listWeek(toDatumString(weekStart), toDatumString(eind))
       .then(setItems)
-      .catch((err) => toast.error(getErrorMessage(err, "Weekmenu laden mislukt.")));
+      .catch((err) => toast.error(foutTekst(err, "Weekmenu laden mislukt.")));
   }, [weekStart]);
 
   useEffect(() => {
@@ -87,7 +87,7 @@ function WeekmenuPage() {
       setBewerkDatum(null);
       toast.success("Weekmenu bijgewerkt.");
     } catch (err) {
-      toast.error(getErrorMessage(err, "Opslaan mislukt."));
+      toast.error(foutTekst(err, "Opslaan mislukt."));
     } finally {
       setBezig(false);
     }
@@ -101,7 +101,7 @@ function WeekmenuPage() {
       setBewerkDatum(null);
       toast.success("Verwijderd.");
     } catch (err) {
-      toast.error(getErrorMessage(err, "Verwijderen mislukt."));
+      toast.error(foutTekst(err, "Verwijderen mislukt."));
     } finally {
       setBezig(false);
     }
