@@ -21,7 +21,7 @@ export const Route = createFileRoute("/onboarding")({
 
 function OnboardingPage() {
   const navigate = useNavigate();
-  const { refreshProfile } = useAuth();
+  const { profile, refreshProfile } = useAuth();
   const [tab, setTab] = useState<"maken" | "aansluiten">("maken");
   const [naam, setNaam] = useState("");
   const [code, setCode] = useState("");
