@@ -12,3 +12,5 @@ export function foutTekst(err: unknown, fallback = "Er ging iets mis. Probeer he
   }
   return fallback;
 }
+
+export const getErrorMessage = foutTekst;
