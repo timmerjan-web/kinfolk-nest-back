@@ -19,7 +19,7 @@ export function AppShell({
   action,
 }: {
   title: string;
-  subtitle?: string;
+  subtitle?: string | undefined;
   children: ReactNode;
   action?: ReactNode;
 }) {

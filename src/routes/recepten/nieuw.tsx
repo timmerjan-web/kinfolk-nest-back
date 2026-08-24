@@ -6,6 +6,7 @@ import { RequireGezin } from "@/components/require-auth";
 import { ReceptForm } from "@/components/recept-form";
 import { useAuth } from "@/lib/auth";
 import { createRecept, type ReceptInvoer } from "@/lib/recepten";
+import { foutTekst } from "@/lib/errors";
 
 export const Route = createFileRoute("/recepten/nieuw")({
   head: () => ({ meta: [{ title: "Nieuw recept — Gezinsapp" }] }),
@@ -29,7 +30,7 @@ function NieuwReceptPage() {
       toast.success(`"${recept.titel}" toegevoegd.`);
       navigate({ to: "/recepten/$receptId", params: { receptId: recept.id }, replace: true });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Recept opslaan mislukt.");
+      toast.error(foutTekst(err, "Recept opslaan mislukt."));
     } finally {
       setBezig(false);
     }

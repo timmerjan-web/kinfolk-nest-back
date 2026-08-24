@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { AppShell, SectionCard } from "@/components/app-shell";
 import { RequireGezin } from "@/components/require-auth";
 import { listRecepten, type Recept } from "@/lib/recepten";
+import { foutTekst } from "@/lib/errors";
 
 export const Route = createFileRoute("/recepten/")({
   head: () => ({ meta: [{ title: "Recepten — Gezinsapp" }] }),
@@ -22,7 +23,7 @@ function ReceptenPage() {
   useEffect(() => {
     listRecepten()
       .then(setRecepten)
-      .catch((err) => toast.error(err instanceof Error ? err.message : "Recepten laden mislukt."));
+      .catch((err) => toast.error(foutTekst(err, "Recepten laden mislukt.")));
   }, []);
 
   const gefilterd = (recepten ?? []).filter((r) =>

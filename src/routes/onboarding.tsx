@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth";
 import { maakGezinAan, wordGezinslid } from "@/lib/household";
+import { foutTekst } from "@/lib/errors";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({ meta: [{ title: "Gezin — Gezinsapp" }] }),
@@ -37,7 +38,7 @@ function OnboardingPage() {
       toast.success(`Gezin "${naam}" aangemaakt.`);
       navigate({ to: "/", replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(foutTekst(err));
     } finally {
       setBusy(false);
     }
@@ -53,7 +54,7 @@ function OnboardingPage() {
       toast.success("Je bent aangesloten bij het gezin.");
       navigate({ to: "/", replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(foutTekst(err));
     } finally {
       setBusy(false);
     }
