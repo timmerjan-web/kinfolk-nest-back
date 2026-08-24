@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      boodschappen_items: {
+        Row: {
+          afgevinkt: boolean
+          bron_recept_id: string | null
+          created_at: string
+          created_by: string | null
+          gezin_id: string
+          id: string
+          naam: string
+          updated_at: string
+        }
+        Insert: {
+          afgevinkt?: boolean
+          bron_recept_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          gezin_id: string
+          id?: string
+          naam: string
+          updated_at?: string
+        }
+        Update: {
+          afgevinkt?: boolean
+          bron_recept_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          gezin_id?: string
+          id?: string
+          naam?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "boodschappen_items_gezin_id_fkey"
+            columns: ["gezin_id"]
+            isOneToOne: false
+            referencedRelation: "gezinnen"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "boodschappen_items_bron_recept_id_fkey"
+            columns: ["bron_recept_id"]
+            isOneToOne: false
+            referencedRelation: "recepten"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gezin_uitnodigingen: {
         Row: {
           code: string
