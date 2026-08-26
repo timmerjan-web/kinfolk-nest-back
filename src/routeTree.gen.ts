@@ -17,6 +17,7 @@ import { Route as FotosRouteImport } from './routes/fotos'
 import { Route as GezinRouteImport } from './routes/gezin'
 import { Route as KlusjesRouteImport } from './routes/klusjes'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as PrikbordRouteImport } from './routes/prikbord'
 import { Route as WeekmenuRouteImport } from './routes/weekmenu'
 import { Route as ReceptenIndexRouteImport } from './routes/recepten/index'
 import { Route as ReceptenReceptIdRouteImport } from './routes/recepten/$receptId'
@@ -62,6 +63,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrikbordRoute = PrikbordRouteImport.update({
+  id: '/prikbord',
+  path: '/prikbord',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WeekmenuRoute = WeekmenuRouteImport.update({
   id: '/weekmenu',
   path: '/weekmenu',
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/gezin': typeof GezinRoute
   '/klusjes': typeof KlusjesRoute
   '/onboarding': typeof OnboardingRoute
+  '/prikbord': typeof PrikbordRoute
   '/weekmenu': typeof WeekmenuRoute
   '/recepten/$receptId': typeof ReceptenReceptIdRoute
   '/recepten/nieuw': typeof ReceptenNieuwRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByTo {
   '/gezin': typeof GezinRoute
   '/klusjes': typeof KlusjesRoute
   '/onboarding': typeof OnboardingRoute
+  '/prikbord': typeof PrikbordRoute
   '/weekmenu': typeof WeekmenuRoute
   '/recepten/$receptId': typeof ReceptenReceptIdRoute
   '/recepten/nieuw': typeof ReceptenNieuwRoute
@@ -121,6 +129,7 @@ export interface FileRoutesById {
   '/gezin': typeof GezinRoute
   '/klusjes': typeof KlusjesRoute
   '/onboarding': typeof OnboardingRoute
+  '/prikbord': typeof PrikbordRoute
   '/weekmenu': typeof WeekmenuRoute
   '/recepten/$receptId': typeof ReceptenReceptIdRoute
   '/recepten/nieuw': typeof ReceptenNieuwRoute
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/gezin'
     | '/klusjes'
     | '/onboarding'
+    | '/prikbord'
     | '/weekmenu'
     | '/recepten/$receptId'
     | '/recepten/nieuw'
@@ -151,6 +161,7 @@ export interface FileRouteTypes {
     | '/gezin'
     | '/klusjes'
     | '/onboarding'
+    | '/prikbord'
     | '/weekmenu'
     | '/recepten/$receptId'
     | '/recepten/nieuw'
@@ -165,6 +176,7 @@ export interface FileRouteTypes {
     | '/gezin'
     | '/klusjes'
     | '/onboarding'
+    | '/prikbord'
     | '/weekmenu'
     | '/recepten/$receptId'
     | '/recepten/nieuw'
@@ -180,6 +192,7 @@ export interface RootRouteChildren {
   GezinRoute: typeof GezinRoute
   KlusjesRoute: typeof KlusjesRoute
   OnboardingRoute: typeof OnboardingRoute
+  PrikbordRoute: typeof PrikbordRoute
   WeekmenuRoute: typeof WeekmenuRoute
   ReceptenReceptIdRoute: typeof ReceptenReceptIdRoute
   ReceptenNieuwRoute: typeof ReceptenNieuwRoute
@@ -244,6 +257,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/prikbord': {
+      id: '/prikbord'
+      path: '/prikbord'
+      fullPath: '/prikbord'
+      preLoaderRoute: typeof PrikbordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/weekmenu': {
       id: '/weekmenu'
       path: '/weekmenu'
@@ -284,6 +304,7 @@ const rootRouteChildren: RootRouteChildren = {
   GezinRoute: GezinRoute,
   KlusjesRoute: KlusjesRoute,
   OnboardingRoute: OnboardingRoute,
+  PrikbordRoute: PrikbordRoute,
   WeekmenuRoute: WeekmenuRoute,
   ReceptenReceptIdRoute: ReceptenReceptIdRoute,
   ReceptenNieuwRoute: ReceptenNieuwRoute,
