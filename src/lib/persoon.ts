@@ -17,5 +17,5 @@ export function kleurVoorPersoon(id: string): string {
   for (let i = 0; i < id.length; i++) {
     hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
   }
-  return PALET[hash % PALET.length];
+  return PALET[hash % PALET.length] ?? "bg-muted-foreground/30";
 }
