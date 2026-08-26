@@ -10,7 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BoodschappenRouteImport } from './routes/boodschappen'
+import { Route as FotosRouteImport } from './routes/fotos'
 import { Route as GezinRouteImport } from './routes/gezin'
 import { Route as KlusjesRouteImport } from './routes/klusjes'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
@@ -24,9 +27,24 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AgendaRoute = AgendaRouteImport.update({
+  id: '/agenda',
+  path: '/agenda',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BoodschappenRoute = BoodschappenRouteImport.update({
+  id: '/boodschappen',
+  path: '/boodschappen',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FotosRoute = FotosRouteImport.update({
+  id: '/fotos',
+  path: '/fotos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GezinRoute = GezinRouteImport.update({
@@ -67,7 +85,10 @@ const ReceptenNieuwRoute = ReceptenNieuwRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/agenda': typeof AgendaRoute
   '/auth': typeof AuthRoute
+  '/boodschappen': typeof BoodschappenRoute
+  '/fotos': typeof FotosRoute
   '/gezin': typeof GezinRoute
   '/klusjes': typeof KlusjesRoute
   '/onboarding': typeof OnboardingRoute
@@ -78,7 +99,10 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/agenda': typeof AgendaRoute
   '/auth': typeof AuthRoute
+  '/boodschappen': typeof BoodschappenRoute
+  '/fotos': typeof FotosRoute
   '/gezin': typeof GezinRoute
   '/klusjes': typeof KlusjesRoute
   '/onboarding': typeof OnboardingRoute
@@ -90,7 +114,10 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/agenda': typeof AgendaRoute
   '/auth': typeof AuthRoute
+  '/boodschappen': typeof BoodschappenRoute
+  '/fotos': typeof FotosRoute
   '/gezin': typeof GezinRoute
   '/klusjes': typeof KlusjesRoute
   '/onboarding': typeof OnboardingRoute
@@ -103,7 +130,10 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/agenda'
     | '/auth'
+    | '/boodschappen'
+    | '/fotos'
     | '/gezin'
     | '/klusjes'
     | '/onboarding'
@@ -114,7 +144,10 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/agenda'
     | '/auth'
+    | '/boodschappen'
+    | '/fotos'
     | '/gezin'
     | '/klusjes'
     | '/onboarding'
@@ -125,7 +158,10 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/agenda'
     | '/auth'
+    | '/boodschappen'
+    | '/fotos'
     | '/gezin'
     | '/klusjes'
     | '/onboarding'
@@ -137,7 +173,10 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AgendaRoute: typeof AgendaRoute
   AuthRoute: typeof AuthRoute
+  BoodschappenRoute: typeof BoodschappenRoute
+  FotosRoute: typeof FotosRoute
   GezinRoute: typeof GezinRoute
   KlusjesRoute: typeof KlusjesRoute
   OnboardingRoute: typeof OnboardingRoute
@@ -156,11 +195,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/agenda': {
+      id: '/agenda'
+      path: '/agenda'
+      fullPath: '/agenda'
+      preLoaderRoute: typeof AgendaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/boodschappen': {
+      id: '/boodschappen'
+      path: '/boodschappen'
+      fullPath: '/boodschappen'
+      preLoaderRoute: typeof BoodschappenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fotos': {
+      id: '/fotos'
+      path: '/fotos'
+      fullPath: '/fotos'
+      preLoaderRoute: typeof FotosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/gezin': {
@@ -217,7 +277,10 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AgendaRoute: AgendaRoute,
   AuthRoute: AuthRoute,
+  BoodschappenRoute: BoodschappenRoute,
+  FotosRoute: FotosRoute,
   GezinRoute: GezinRoute,
   KlusjesRoute: KlusjesRoute,
   OnboardingRoute: OnboardingRoute,
