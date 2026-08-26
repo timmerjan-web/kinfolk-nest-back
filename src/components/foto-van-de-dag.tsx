@@ -28,14 +28,19 @@ export function FotoVanDeDag() {
 
   const laad = async () => {
     if (!user || !profile?.gezin_id) return;
-    const [fotosVandaag, eigenFotos, ledenResult] = await Promise.all([
-      listFotosVoorDatum(vandaag),
-      listEigenFotos(user.id),
-      supabase.from("profiles").select("id, naam").eq("gezin_id", profile.gezin_id),
-    ]);
-    setGezinFotos(fotosVandaag);
-    setStreak(berekenStreak(eigenFotos.map((f) => f.datum)));
-    setLeden(ledenResult.data ?? []);
+    try {
+      const [fotosVandaag, eigenFotos, ledenResult] = await Promise.all([
+        listFotosVoorDatum(vandaag),
+        listEigenFotos(user.id),
+        supabase.from("profiles").select("id, naam").eq("gezin_id", profile.gezin_id),
+      ]);
+      setGezinFotos(fotosVandaag);
+      setStreak(berekenStreak(eigenFotos.map((f) => f.datum)));
+      setLeden(ledenResult.data ?? []);
+    } catch (err) {
+      toast.error(foutTekst(err, "Foto's laden mislukt."));
+      setGezinFotos([]);
+    }
   };
 
   useEffect(() => {
