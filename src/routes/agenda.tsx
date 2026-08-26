@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { CalendarPlus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, SectionCard } from "@/components/app-shell";
@@ -8,11 +8,13 @@ import { AgendaForm } from "@/components/agenda-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { foutTekst } from "@/lib/errors";
+import { kleurVoorPersoon } from "@/lib/persoon";
 import {
   createAgendaItem,
+  dagLabel,
   deleteAgendaItem,
-  formatteerDatum,
   formatteerTijd,
   listAgenda,
   type AgendaInvoer,
@@ -24,9 +26,10 @@ import {
   listEigenKoppelingen,
   ontkoppelAgenda,
   type AgendaKoppeling,
+  type ExterneAfspraak,
   type ExterneAgendaResultaat,
 } from "@/lib/externeAgenda";
-import { toDatumString } from "@/lib/weekmenu";
+import { addDays, toDatumString } from "@/lib/weekmenu";
 
 export const Route = createFileRoute("/agenda")({
   head: () => ({ meta: [{ title: "Agenda — Gezinsapp" }] }),
@@ -37,9 +40,20 @@ export const Route = createFileRoute("/agenda")({
   ),
 });
 
+type ExternAfspraakMetPersoon = ExterneAfspraak & { gebruiker_id: string; naam: string };
+type WeergaveItem =
+  { soort: "eigen"; item: AgendaItem } | { soort: "extern"; afspraak: ExternAfspraakMetPersoon };
+
+function sorteersleutel(wi: WeergaveItem): string {
+  if (wi.soort === "eigen") return wi.item.tijd ?? "";
+  if (wi.afspraak.heleDag) return "";
+  return new Date(wi.afspraak.start).toTimeString().slice(0, 8);
+}
+
 function AgendaPage() {
   const { profile, user } = useAuth();
   const [items, setItems] = useState<AgendaItem[] | null>(null);
+  const [leden, setLeden] = useState<{ id: string; naam: string }[]>([]);
   const [nieuwOpen, setNieuwOpen] = useState(false);
   const [bezig, setBezig] = useState(false);
   const [koppelingen, setKoppelingen] = useState<AgendaKoppeling[]>([]);
@@ -57,6 +71,15 @@ function AgendaPage() {
   useEffect(() => {
     laad();
   }, [laad]);
+
+  useEffect(() => {
+    if (!profile?.gezin_id) return;
+    supabase
+      .from("profiles")
+      .select("id, naam")
+      .eq("gezin_id", profile.gezin_id)
+      .then(({ data }) => setLeden(data ?? []));
+  }, [profile?.gezin_id]);
 
   useEffect(() => {
     if (!user) return;
@@ -105,6 +128,7 @@ function AgendaPage() {
   };
 
   const vandaag = toDatumString(new Date());
+  const morgen = toDatumString(addDays(new Date(), 1));
 
   const toevoegen = async (invoer: AgendaInvoer) => {
     if (!profile?.gezin_id || !user) return;
@@ -131,12 +155,36 @@ function AgendaPage() {
     }
   };
 
-  const aankomend = (items ?? [])
-    .filter((i) => i.datum >= vandaag)
-    .sort((a, b) => a.datum.localeCompare(b.datum) || (a.tijd ?? "").localeCompare(b.tijd ?? ""));
-  const verleden = (items ?? [])
-    .filter((i) => i.datum < vandaag)
-    .sort((a, b) => b.datum.localeCompare(a.datum) || (b.tijd ?? "").localeCompare(a.tijd ?? ""));
+  const perDag = useMemo(() => {
+    const kaart = new Map<string, WeergaveItem[]>();
+    for (const item of items ?? []) {
+      const lijst = kaart.get(item.datum) ?? [];
+      lijst.push({ soort: "eigen", item });
+      kaart.set(item.datum, lijst);
+    }
+    for (const r of externeResultaten ?? []) {
+      for (const a of r.afspraken) {
+        const datum = toDatumString(new Date(a.start));
+        const lijst = kaart.get(datum) ?? [];
+        lijst.push({
+          soort: "extern",
+          afspraak: { ...a, gebruiker_id: r.gebruiker_id, naam: r.naam },
+        });
+        kaart.set(datum, lijst);
+      }
+    }
+    for (const lijst of kaart.values()) {
+      lijst.sort((a, b) => sorteersleutel(a).localeCompare(sorteersleutel(b)));
+    }
+    return kaart;
+  }, [items, externeResultaten]);
+
+  const datums = Array.from(perDag.keys()).sort();
+  const aankomendDatums = datums.filter((d) => d >= vandaag);
+  const verledenDatums = datums
+    .filter((d) => d < vandaag)
+    .sort()
+    .reverse();
 
   return (
     <AppShell
@@ -164,68 +212,63 @@ function AgendaPage() {
       )}
 
       {items === null ? (
-        <SectionCard className="text-center text-sm text-muted-foreground">Laden…</SectionCard>
-      ) : aankomend.length === 0 && verleden.length === 0 ? (
-        <SectionCard className="text-center text-sm text-muted-foreground">
+        <SectionCard className="mb-3 text-center text-sm text-muted-foreground">Laden…</SectionCard>
+      ) : aankomendDatums.length === 0 && verledenDatums.length === 0 ? (
+        <SectionCard className="mb-3 text-center text-sm text-muted-foreground">
           Nog geen afspraken.
         </SectionCard>
+      ) : aankomendDatums.length === 0 ? (
+        <SectionCard className="mb-3 text-center text-sm text-muted-foreground">
+          Geen aankomende afspraken.
+        </SectionCard>
       ) : (
-        <>
-          {aankomend.length > 0 ? (
-            <SectionCard className="mb-3">
-              <ul className="space-y-1">
-                {aankomend.map((item) => (
-                  <AgendaRij key={item.id} item={item} onVerwijder={verwijderen} />
-                ))}
-              </ul>
-            </SectionCard>
-          ) : (
-            <SectionCard className="mb-3 text-center text-sm text-muted-foreground">
-              Geen aankomende afspraken.
-            </SectionCard>
-          )}
-
-          {verleden.length > 0 && (
-            <SectionCard className="mb-3">
-              <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                Verleden
-              </h2>
-              <ul className="space-y-1">
-                {verleden.map((item) => (
-                  <AgendaRij key={item.id} item={item} onVerwijder={verwijderen} verleden />
-                ))}
-              </ul>
-            </SectionCard>
-          )}
-        </>
+        aankomendDatums.map((datum) => (
+          <SectionCard key={datum} className="mb-3">
+            <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              {dagLabel(datum, vandaag, morgen)}
+            </h2>
+            <ul className="space-y-1">
+              {perDag
+                .get(datum)!
+                .map((wi, i) =>
+                  wi.soort === "eigen" ? (
+                    <AgendaRij
+                      key={wi.item.id}
+                      item={wi.item}
+                      leden={leden}
+                      onVerwijder={verwijderen}
+                    />
+                  ) : (
+                    <ExternRij key={`extern-${datum}-${i}`} afspraak={wi.afspraak} />
+                  ),
+                )}
+            </ul>
+          </SectionCard>
+        ))
       )}
 
-      {externeResultaten && externeResultaten.some((r) => r.afspraken.length > 0) && (
+      {verledenDatums.length > 0 && (
         <SectionCard className="mb-3">
           <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Van gekoppelde agenda's
+            Verleden
           </h2>
           <ul className="space-y-1">
-            {externeResultaten
-              .flatMap((r) => r.afspraken.map((a) => ({ ...a, naam: r.naam })))
-              .sort((a, b) => a.start.localeCompare(b.start))
-              .slice(0, 20)
-              .map((a, i) => (
-                <li key={i} className="text-sm">
-                  <span className="text-muted-foreground">{a.naam}:</span> {a.titel}
-                  <span className="text-[11px] text-muted-foreground">
-                    {" "}
-                    —{" "}
-                    {new Date(a.start).toLocaleDateString("nl-NL", {
-                      weekday: "short",
-                      day: "numeric",
-                      month: "short",
-                    })}
-                    {!a.heleDag &&
-                      ` ${new Date(a.start).toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })}`}
-                  </span>
-                </li>
-              ))}
+            {verledenDatums.flatMap((datum) =>
+              perDag
+                .get(datum)!
+                .filter(
+                  (wi): wi is Extract<WeergaveItem, { soort: "eigen" }> => wi.soort === "eigen",
+                )
+                .map((wi) => (
+                  <AgendaRij
+                    key={wi.item.id}
+                    item={wi.item}
+                    leden={leden}
+                    onVerwijder={verwijderen}
+                    verleden
+                  />
+                )),
+            )}
           </ul>
         </SectionCard>
       )}
@@ -283,20 +326,28 @@ function AgendaPage() {
 
 function AgendaRij({
   item,
+  leden,
   onVerwijder,
   verleden = false,
 }: {
   item: AgendaItem;
+  leden: { id: string; naam: string }[];
   onVerwijder: (item: AgendaItem) => void;
   verleden?: boolean;
 }) {
+  const maker = item.created_by ? leden.find((l) => l.id === item.created_by) : undefined;
   return (
-    <li className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-muted">
+    <li className="flex items-start gap-2 rounded-lg px-2 py-1.5 hover:bg-muted">
+      <span
+        className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${
+          item.created_by ? kleurVoorPersoon(item.created_by) : "bg-muted-foreground/30"
+        }`}
+      />
       <div className="min-w-0 flex-1">
         <p className={`text-sm ${verleden ? "text-muted-foreground" : ""}`}>{item.titel}</p>
         <p className="text-[11px] text-muted-foreground">
-          {formatteerDatum(item.datum)}
-          {item.tijd && ` · ${formatteerTijd(item.tijd)}`}
+          {item.tijd ? formatteerTijd(item.tijd) : "Hele dag"}
+          {maker && ` · ${maker.naam}`}
         </p>
         {item.notitie && <p className="mt-0.5 text-[11px] text-muted-foreground">{item.notitie}</p>}
       </div>
@@ -307,6 +358,29 @@ function AgendaRij({
       >
         <Trash2 className="h-3.5 w-3.5" />
       </button>
+    </li>
+  );
+}
+
+function ExternRij({ afspraak }: { afspraak: ExternAfspraakMetPersoon }) {
+  return (
+    <li className="flex items-start gap-2 rounded-lg border border-dashed border-border px-2 py-1.5">
+      <span
+        className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${kleurVoorPersoon(afspraak.gebruiker_id)}`}
+      />
+      <div className="min-w-0 flex-1">
+        <p className="text-sm text-muted-foreground">{afspraak.titel}</p>
+        <p className="text-[11px] text-muted-foreground">
+          {afspraak.heleDag
+            ? "Hele dag"
+            : new Date(afspraak.start).toLocaleTimeString("nl-NL", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+          {" · "}
+          {afspraak.naam}
+        </p>
+      </div>
     </li>
   );
 }

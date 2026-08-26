@@ -49,3 +49,11 @@ const [jaar, maand, dag] = datumString.split("-").map(Number) as [number, number
 export function formatteerTijd(tijdString: string): string {
   return tijdString.slice(0, 5);
 }
+
+// "Vandaag"/"Morgen" i.p.v. een kale datum, voor de gegroepeerde
+// agenda-weergave.
+export function dagLabel(datumStr: string, vandaagStr: string, morgenStr: string): string {
+  if (datumStr === vandaagStr) return "Vandaag";
+  if (datumStr === morgenStr) return "Morgen";
+  return formatteerDatum(datumStr);
+}

@@ -6,7 +6,7 @@ import { AppShell, SectionCard } from "@/components/app-shell";
 import { RequireGezin } from "@/components/require-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAuth, type Rol } from "@/lib/auth";
+import { refreshProfile, useAuth, type Rol } from "@/lib/auth";
 import { maakUitnodigingAan } from "@/lib/household";
 import { supabase } from "@/integrations/supabase/client";
 import { foutTekst } from "@/lib/errors";
@@ -31,6 +31,8 @@ function GezinPage() {
   const [laatsteCode, setLaatsteCode] = useState<{ code: string; rol: Rol } | null>(null);
   const [eigenGeboortedatum, setEigenGeboortedatum] = useState("");
   const [opslaanBezig, setOpslaanBezig] = useState(false);
+  const [eigenNaam, setEigenNaam] = useState("");
+  const [naamOpslaanBezig, setNaamOpslaanBezig] = useState(false);
 
   const laadGezin = useCallback(async () => {
     if (!profile?.gezin_id) return;
@@ -53,7 +55,27 @@ function GezinPage() {
   useEffect(() => {
     const eigen = leden.find((l) => l.id === user?.id);
     setEigenGeboortedatum(eigen?.geboortedatum ?? "");
+    setEigenNaam(eigen?.naam ?? "");
   }, [leden, user?.id]);
+
+  const opslaanNaam = async () => {
+    if (!user || !eigenNaam.trim()) return;
+    setNaamOpslaanBezig(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ naam: eigenNaam.trim() })
+        .eq("id", user.id);
+      if (error) throw error;
+      toast.success("Naam opgeslagen.");
+      await refreshProfile();
+      void laadGezin();
+    } catch (err) {
+      toast.error(foutTekst(err, "Opslaan mislukt."));
+    } finally {
+      setNaamOpslaanBezig(false);
+    }
+  };
 
   const opslaanVerjaardag = async () => {
     if (!user) return;
@@ -112,21 +134,39 @@ function GezinPage() {
                 </span>
               </div>
               {lid.id === user?.id ? (
-                <div className="mt-2 flex items-center gap-2">
-                  <Input
-                    type="date"
-                    value={eigenGeboortedatum}
-                    onChange={(e) => setEigenGeboortedatum(e.target.value)}
-                    className="h-8 flex-1 text-xs"
-                  />
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    disabled={opslaanBezig}
-                    onClick={() => void opslaanVerjaardag()}
-                  >
-                    Opslaan
-                  </Button>
+                <div className="mt-2 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={eigenNaam}
+                      onChange={(e) => setEigenNaam(e.target.value)}
+                      placeholder="Jouw naam"
+                      className="h-8 flex-1 text-xs"
+                    />
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      disabled={naamOpslaanBezig || !eigenNaam.trim()}
+                      onClick={() => void opslaanNaam()}
+                    >
+                      Opslaan
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="date"
+                      value={eigenGeboortedatum}
+                      onChange={(e) => setEigenGeboortedatum(e.target.value)}
+                      className="h-8 flex-1 text-xs"
+                    />
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      disabled={opslaanBezig}
+                      onClick={() => void opslaanVerjaardag()}
+                    >
+                      Opslaan
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 lid.geboortedatum && (
