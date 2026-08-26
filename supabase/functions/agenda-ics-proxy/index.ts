@@ -23,9 +23,8 @@ const MAX_AFSPRAKEN_PER_AGENDA = 300;
 // Werkgrens tijdens het verzamelen; pas achteraf sorteren en afkappen.
 const MAX_VERZAMELD = 2000;
 
-// Grote agenda's bevatten soms duizenden losse afspraken; losse afspraken
-// zijn goedkoop, dus deze grens ligt ruim boven een normale gezinsagenda.
-const MAX_VEVENTS = 8000;
+// Alleen na de goedkope tekstfilter worden gebeurtenissen door ical.js geparsed.
+const MAX_VEVENTS = 2500;
 // Grote iCal-exports volledig parsen kost te veel CPU.
 const MAX_ICAL_BYTES = 5_000_000;
 
@@ -130,7 +129,14 @@ async function haalAfsprakenOp(
   const tekst = await resp.text();
   if (tekst.length > MAX_ICAL_BYTES) throw new Error("Agenda is te groot om te verwerken.");
 
-  const jcal = ICAL.parse(tekst);
+  // ical.js parseert een volledig VCALENDAR synchroon. Een agenda met jaren aan
+  // oude, losse afspraken kan daardoor het CPU-budget opgebruiken vóór onze
+  // lussen zelfs beginnen. Verwijder zulke blokken eerst als gewone tekst;
+  // tijdzones en alle terugkerende series blijven behouden.
+  const gefilterdeTekst = filterIcalVoorVenster(tekst, nu, tot);
+  if (Date.now() > deadline) throw new Error("Agenda verwerken duurde te lang.");
+
+  const jcal = ICAL.parse(gefilterdeTekst);
   const component = new ICAL.Component(jcal);
   const vevents = component.getAllSubcomponents("vevent").slice(0, MAX_VEVENTS);
 
@@ -164,26 +170,19 @@ async function haalAfsprakenOp(
         const until = rrule?.until?.toJSDate?.();
         if (until && until < nu) continue;
 
-        // Vooruitspoelen naar een ÉCHTE herhaling dicht bij nu: dtstart plus
-        // n hele periodes. Zo blijven dag en uur exact kloppen (een willekeurig
-        // moment meegeven zou de begintijd van de serie overschrijven), maar
-        // hoeven we niet alle herhalingen sinds jaren terug af te lopen.
-        let startVanaf: unknown = undefined;
+        // Start de iterator vlak vóór het zichtbare venster, maar behoud de
+        // lokale kloktijd en tijdzone van DTSTART. Dit werkt ook voor complexe
+        // maand- en jaarregels en voorkomt itereren vanaf een jarenoude DTSTART.
+        let startVanaf: unknown;
         try {
           const dtstart = event.startDate;
-          const freq = rrule?.freq;
-          const interval = rrule?.interval && rrule.interval > 0 ? rrule.interval : 1;
-          const eenvoudig = !rrule?.parts || Object.keys(rrule.parts).length === 0;
-          const periodeSec =
-            freq === "DAILY" ? 86400 * interval : freq === "WEEKLY" ? 604800 * interval : 0;
-          if (dtstart && periodeSec > 0 && (freq === "WEEKLY" || eenvoudig)) {
-            const verschilSec = (venstervanaf.getTime() - dtstart.toJSDate().getTime()) / 1000;
-            const n = Math.floor(verschilSec / periodeSec);
-            if (n > 0) {
-              const kandidaat = dtstart.clone();
-              kandidaat.addDuration(ICAL.Duration.fromSeconds(n * periodeSec));
-              startVanaf = kandidaat;
-            }
+          if (dtstart && dtstart.toJSDate() < venstervanaf) {
+            const lokaleDrempel = ICAL.Time.fromJSDate(venstervanaf, false);
+            const kandidaat = dtstart.clone();
+            kandidaat.year = lokaleDrempel.year;
+            kandidaat.month = lokaleDrempel.month;
+            kandidaat.day = lokaleDrempel.day;
+            startVanaf = kandidaat;
           }
         } catch {
           startVanaf = undefined;
@@ -229,6 +228,37 @@ async function haalAfsprakenOp(
   afspraken.sort((a, b) => a.start.localeCompare(b.start));
   return afspraken.slice(0, MAX_AFSPRAKEN_PER_AGENDA);
 
+}
+
+function filterIcalVoorVenster(tekst: string, nu: Date, tot: Date): string {
+  const ondergrens = new Date(nu.getTime() - 2 * 24 * 60 * 60 * 1000);
+  const bovengrens = new Date(tot.getTime() + 2 * 24 * 60 * 60 * 1000);
+  let behouden = 0;
+
+  return tekst.replace(/BEGIN:VEVENT\r?\n[\s\S]*?END:VEVENT\r?\n?/gi, (blok) => {
+    // RRULE/RDATE-series en uitzonderingen moeten samen beschikbaar blijven.
+    if (/\r?\n(?:RRULE|RDATE|RECURRENCE-ID)[;:]/i.test(`\n${blok}`)) {
+      behouden++;
+      return behouden <= MAX_VEVENTS ? blok : "";
+    }
+
+    const start = leesIcalDatum(blok, "DTSTART");
+    const eind = leesIcalDatum(blok, "DTEND") ?? start;
+    if (!start || !eind || eind < ondergrens || start > bovengrens) return "";
+
+    behouden++;
+    return behouden <= MAX_VEVENTS ? blok : "";
+  });
+}
+
+function leesIcalDatum(blok: string, eigenschap: "DTSTART" | "DTEND"): Date | null {
+  const match = blok.match(new RegExp(`(?:^|\\r?\\n)${eigenschap}(?:;[^:\\r\\n]*)?:([^\\r\\n]+)`, "i"));
+  if (!match?.[1]) return null;
+  const waarde = match[1].trim();
+  const datumMatch = waarde.match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})?Z?)?/);
+  if (!datumMatch) return null;
+  const [, jaar, maand, dag, uur = "00", minuut = "00", seconde = "00"] = datumMatch;
+  return new Date(Date.UTC(Number(jaar), Number(maand) - 1, Number(dag), Number(uur), Number(minuut), Number(seconde)));
 }
 
 function json(body: unknown, status = 200) {
