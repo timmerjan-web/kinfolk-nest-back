@@ -11,6 +11,7 @@ import { toDatumString, type WeekmenuItem } from "@/lib/weekmenu";
 import { formatteerTijd, type AgendaItem } from "@/lib/agenda";
 import { type Klusje } from "@/lib/klusjes";
 import { dagenTotVerjaardag, formatteerVerjaardag } from "@/lib/verjaardagen";
+import { haalExterneAfspraken, type ExterneAfspraak } from "@/lib/externeAgenda";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [{ title: "Vandaag — Gezinsapp" }] }),
@@ -36,6 +37,9 @@ function TodayPage() {
   );
   const [klusjes, setKlusjes] = useState<Klusje[] | null>(null);
   const [afspraken, setAfspraken] = useState<AgendaItem[] | null>(null);
+  const [externAfsprakenVandaag, setExternAfsprakenVandaag] = useState<
+    (ExterneAfspraak & { naam: string })[]
+  >([]);
 
   useEffect(() => {
     if (!profile?.gezin_id) return;
@@ -67,6 +71,19 @@ function TodayPage() {
       .order("tijd", { ascending: true, nullsFirst: false })
       .then(({ data }) => setAfspraken(data ?? []));
   }, [profile?.gezin_id, vandaagStr]);
+
+  useEffect(() => {
+    haalExterneAfspraken()
+      .then((resultaten) => {
+        const vanVandaag = resultaten.flatMap((r) =>
+          r.afspraken
+            .filter((a) => toDatumString(new Date(a.start)) === vandaagStr)
+            .map((a) => ({ ...a, naam: r.naam })),
+        );
+        setExternAfsprakenVandaag(vanVandaag);
+      })
+      .catch(() => setExternAfsprakenVandaag([]));
+  }, [vandaagStr]);
 
   const naamVoor = (id: string | null) => (id ? leden.find((l) => l.id === id)?.naam : undefined);
 
@@ -130,7 +147,7 @@ function TodayPage() {
         </div>
         {afspraken === null ? (
           <p className="text-sm text-muted-foreground">Laden…</p>
-        ) : afspraken.length === 0 ? (
+        ) : afspraken.length === 0 && externAfsprakenVandaag.length === 0 ? (
           <p className="text-sm text-muted-foreground">Geen afspraken vandaag.</p>
         ) : (
           <ul className="space-y-1">
@@ -142,6 +159,19 @@ function TodayPage() {
                   </span>
                 )}
                 {a.titel}
+              </li>
+            ))}
+            {externAfsprakenVandaag.map((a, i) => (
+              <li key={`extern-${i}`} className="text-sm text-muted-foreground">
+                {!a.heleDag && (
+                  <span className="font-mono text-xs">
+                    {new Date(a.start).toLocaleTimeString("nl-NL", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}{" "}
+                  </span>
+                )}
+                {a.naam}: {a.titel}
               </li>
             ))}
           </ul>

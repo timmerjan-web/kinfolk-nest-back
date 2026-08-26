@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      agenda_koppelingen: {
+        Row: {
+          created_at: string
+          gebruiker_id: string
+          gezin_id: string
+          ical_url: string
+          id: string
+          label: string | null
+        }
+        Insert: {
+          created_at?: string
+          gebruiker_id: string
+          gezin_id: string
+          ical_url: string
+          id?: string
+          label?: string | null
+        }
+        Update: {
+          created_at?: string
+          gebruiker_id?: string
+          gezin_id?: string
+          ical_url?: string
+          id?: string
+          label?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agenda_koppelingen_gezin_id_fkey"
+            columns: ["gezin_id"]
+            isOneToOne: false
+            referencedRelation: "gezinnen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prikbord_items: {
         Row: {
           created_at: string
