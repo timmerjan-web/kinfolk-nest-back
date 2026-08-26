@@ -411,6 +411,7 @@ export type Database = {
         Args: { p_rol: Database["public"]["Enums"]["app_rol"] }
         Returns: string
       }
+      heeft_eigen_foto_op: { Args: { _datum: string }; Returns: boolean }
     }
     Enums: {
       app_rol: "ouder" | "kind"
