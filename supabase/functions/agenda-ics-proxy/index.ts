@@ -20,10 +20,12 @@ const VOORUIT_DAGEN = 60;
 // Per terugkerende afspraak: hoeveel herhalingen we hoogstens bekijken.
 const MAX_ITERATIES = 200;
 const MAX_AFSPRAKEN_PER_AGENDA = 300;
-// Grote agenda's bevatten soms duizenden losse afspraken.
-const MAX_VEVENTS = 1500;
-// Grote iCal-exports (megabytes) volledig parsen kost te veel CPU.
-const MAX_ICAL_BYTES = 2_000_000;
+// Grote agenda's bevatten soms duizenden losse afspraken; losse afspraken
+// zijn goedkoop, dus deze grens ligt ruim boven een normale gezinsagenda.
+const MAX_VEVENTS = 8000;
+// Grote iCal-exports volledig parsen kost te veel CPU.
+const MAX_ICAL_BYTES = 5_000_000;
+
 // Totaal rekenbudget voor alle agenda's samen (ms).
 const TIJD_BUDGET_MS = 6000;
 
