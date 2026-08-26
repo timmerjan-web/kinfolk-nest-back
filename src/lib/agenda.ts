@@ -40,7 +40,7 @@ export async function deleteAgendaItem(id: string) {
 // (new Date("YYYY-MM-DD") parset als UTC-middernacht en kan een dag
 // terugschuiven in tijdzones ten westen van UTC).
 export function formatteerDatum(datumString: string): string {
-  const [jaar, maand, dag] = datumString.split("-").map(Number);
+const [jaar, maand, dag] = datumString.split("-").map(Number) as [number, number, number];
   const datum = new Date(jaar, maand - 1, dag);
   return datum.toLocaleDateString("nl-NL", { weekday: "short", day: "numeric", month: "short" });
 }

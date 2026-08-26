@@ -10,48 +10,10 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.15"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
-      dagelijkse_fotos: {
-        Row: {
-          bijschrift: string | null
-          created_at: string
-          datum: string
-          gebruiker_id: string
-          gezin_id: string
-          id: string
-          storage_pad: string
-        }
-        Insert: {
-          bijschrift?: string | null
-          created_at?: string
-          datum: string
-          gebruiker_id: string
-          gezin_id: string
-          id?: string
-          storage_pad: string
-        }
-        Update: {
-          bijschrift?: string | null
-          created_at?: string
-          datum?: string
-          gebruiker_id?: string
-          gezin_id?: string
-          id?: string
-          storage_pad?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "dagelijkse_fotos_gezin_id_fkey"
-            columns: ["gezin_id"]
-            isOneToOne: false
-            referencedRelation: "gezinnen"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       agenda_items: {
         Row: {
           created_at: string
@@ -129,64 +91,52 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "boodschappen_items_gezin_id_fkey"
-            columns: ["gezin_id"]
-            isOneToOne: false
-            referencedRelation: "gezinnen"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "boodschappen_items_bron_recept_id_fkey"
             columns: ["bron_recept_id"]
             isOneToOne: false
             referencedRelation: "recepten"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "boodschappen_items_gezin_id_fkey"
+            columns: ["gezin_id"]
+            isOneToOne: false
+            referencedRelation: "gezinnen"
+            referencedColumns: ["id"]
+          },
         ]
       }
-      klusjes: {
+      dagelijkse_fotos: {
         Row: {
-          afgerond: boolean
-          afgerond_door: string | null
-          afgerond_op: string | null
+          bijschrift: string | null
           created_at: string
-          created_by: string | null
-          deadline: string | null
+          datum: string
+          gebruiker_id: string
           gezin_id: string
           id: string
-          titel: string
-          toegewezen_aan: string | null
-          updated_at: string
+          storage_pad: string
         }
         Insert: {
-          afgerond?: boolean
-          afgerond_door?: string | null
-          afgerond_op?: string | null
+          bijschrift?: string | null
           created_at?: string
-          created_by?: string | null
-          deadline?: string | null
+          datum: string
+          gebruiker_id: string
           gezin_id: string
           id?: string
-          titel: string
-          toegewezen_aan?: string | null
-          updated_at?: string
+          storage_pad: string
         }
         Update: {
-          afgerond?: boolean
-          afgerond_door?: string | null
-          afgerond_op?: string | null
+          bijschrift?: string | null
           created_at?: string
-          created_by?: string | null
-          deadline?: string | null
+          datum?: string
+          gebruiker_id?: string
           gezin_id?: string
           id?: string
-          titel?: string
-          toegewezen_aan?: string | null
-          updated_at?: string
+          storage_pad?: string
         }
         Relationships: [
           {
-            foreignKeyName: "klusjes_gezin_id_fkey"
+            foreignKeyName: "dagelijkse_fotos_gezin_id_fkey"
             columns: ["gezin_id"]
             isOneToOne: false
             referencedRelation: "gezinnen"
@@ -253,12 +203,62 @@ export type Database = {
         }
         Relationships: []
       }
+      klusjes: {
+        Row: {
+          afgerond: boolean
+          afgerond_door: string | null
+          afgerond_op: string | null
+          created_at: string
+          created_by: string | null
+          deadline: string | null
+          gezin_id: string
+          id: string
+          titel: string
+          toegewezen_aan: string | null
+          updated_at: string
+        }
+        Insert: {
+          afgerond?: boolean
+          afgerond_door?: string | null
+          afgerond_op?: string | null
+          created_at?: string
+          created_by?: string | null
+          deadline?: string | null
+          gezin_id: string
+          id?: string
+          titel: string
+          toegewezen_aan?: string | null
+          updated_at?: string
+        }
+        Update: {
+          afgerond?: boolean
+          afgerond_door?: string | null
+          afgerond_op?: string | null
+          created_at?: string
+          created_by?: string | null
+          deadline?: string | null
+          gezin_id?: string
+          id?: string
+          titel?: string
+          toegewezen_aan?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "klusjes_gezin_id_fkey"
+            columns: ["gezin_id"]
+            isOneToOne: false
+            referencedRelation: "gezinnen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_initial: string | null
           created_at: string
-          gezin_id: string | null
           geboortedatum: string | null
+          gezin_id: string | null
           id: string
           naam: string
           rol: Database["public"]["Enums"]["app_rol"]
@@ -266,8 +266,8 @@ export type Database = {
         Insert: {
           avatar_initial?: string | null
           created_at?: string
-          gezin_id?: string | null
           geboortedatum?: string | null
+          gezin_id?: string | null
           id: string
           naam: string
           rol?: Database["public"]["Enums"]["app_rol"]
@@ -275,8 +275,8 @@ export type Database = {
         Update: {
           avatar_initial?: string | null
           created_at?: string
-          gezin_id?: string | null
           geboortedatum?: string | null
+          gezin_id?: string | null
           id?: string
           naam?: string
           rol?: Database["public"]["Enums"]["app_rol"]
