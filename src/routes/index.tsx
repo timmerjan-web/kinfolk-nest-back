@@ -11,6 +11,7 @@ import { addDays, toDatumString, type WeekmenuItem } from "@/lib/weekmenu";
 import { dagLabel, formatteerTijd, type AgendaItem } from "@/lib/agenda";
 import { type Klusje } from "@/lib/klusjes";
 import { dagenTotVerjaardag, formatteerVerjaardag } from "@/lib/verjaardagen";
+import { listVerjaardagen, type VerjaardagContact } from "@/lib/verjaardagenContacten";
 import { haalExterneAfspraken, type ExterneAgendaResultaat } from "@/lib/externeAgenda";
 
 type EerstkomendItem = {
@@ -45,6 +46,7 @@ function TodayPage() {
     undefined,
   );
   const [klusjes, setKlusjes] = useState<Klusje[] | null>(null);
+  const [contacten, setContacten] = useState<VerjaardagContact[]>([]);
   const [afsprakenAankomend, setAfsprakenAankomend] = useState<AgendaItem[] | null>(null);
   const [externeResultaten, setExterneResultaten] = useState<ExterneAgendaResultaat[] | null>(null);
   const morgenStr = toDatumString(addDays(vandaag, 1));
@@ -88,6 +90,12 @@ function TodayPage() {
       .catch(() => setExterneResultaten([]));
   }, [vandaagStr]);
 
+  useEffect(() => {
+    listVerjaardagen()
+      .then(setContacten)
+      .catch(() => setContacten([]));
+  }, []);
+
   const eerstkomend = useMemo(() => {
     const nu = new Date();
     const eigen: EerstkomendItem[] = (afsprakenAankomend ?? []).map((a) => ({
@@ -122,9 +130,17 @@ function TodayPage() {
 
   const naamVoor = (id: string | null) => (id ? leden.find((l) => l.id === id)?.naam : undefined);
 
-  const verjaardagen = leden
-    .filter((l): l is Lid & { geboortedatum: string } => !!l.geboortedatum)
-    .map((l) => ({ lid: l, dagen: dagenTotVerjaardag(l.geboortedatum, vandaag) }))
+  const verjaardagen = [
+    ...leden
+      .filter((l): l is Lid & { geboortedatum: string } => !!l.geboortedatum)
+      .map((l) => ({ key: `lid-${l.id}`, naam: l.naam, geboortedatum: l.geboortedatum })),
+    ...contacten.map((c) => ({
+      key: `contact-${c.id}`,
+      naam: c.naam,
+      geboortedatum: c.geboortedatum,
+    })),
+  ]
+    .map((v) => ({ ...v, dagen: dagenTotVerjaardag(v.geboortedatum, vandaag) }))
     .filter(({ dagen }) => dagen <= 7)
     .sort((a, b) => a.dagen - b.dagen);
 
@@ -205,23 +221,30 @@ function TodayPage() {
         )}
       </SectionCard>
 
-      {verjaardagen.length > 0 && (
-        <SectionCard>
-          <div className="mb-1 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+      <SectionCard className="mb-3">
+        <div className="mb-1 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             <Gift className="h-4 w-4" /> Verjaardagen
           </div>
+          <Link to="/verjaardagen" className="text-xs text-muted-foreground underline">
+            Bekijk alles
+          </Link>
+        </div>
+        {verjaardagen.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Geen verjaardagen deze week.</p>
+        ) : (
           <ul className="space-y-1">
-            {verjaardagen.map(({ lid, dagen }) => (
-              <li key={lid.id} className="text-sm">
-                {lid.naam}{" "}
+            {verjaardagen.map(({ key, naam, dagen, geboortedatum }) => (
+              <li key={key} className="text-sm">
+                {naam}{" "}
                 <span className="text-muted-foreground">
-                  {dagen === 0 ? "— vandaag!" : `— ${formatteerVerjaardag(lid.geboortedatum)}`}
+                  {dagen === 0 ? "— vandaag!" : `— ${formatteerVerjaardag(geboortedatum)}`}
                 </span>
               </li>
             ))}
           </ul>
-        </SectionCard>
-      )}
+        )}
+      </SectionCard>
 
       <PrikbordPreview />
     </AppShell>
