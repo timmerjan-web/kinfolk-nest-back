@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { CalendarClock, ChefHat, Gift, ListChecks } from "lucide-react";
 import { AppShell, SectionCard } from "@/components/app-shell";
 import { RequireGezin } from "@/components/require-auth";
+import { FotoVanDeDag } from "@/components/foto-van-de-dag";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toDatumString, type WeekmenuItem } from "@/lib/weekmenu";
@@ -76,6 +77,8 @@ function TodayPage() {
 
   return (
     <AppShell title="Vandaag" subtitle={profile?.naam ? `${groet}, ${profile.naam}` : groet}>
+      <FotoVanDeDag />
+
       <SectionCard className="mb-3">
         <div className="mb-1 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           <ChefHat className="h-4 w-4" /> Weekmenu
