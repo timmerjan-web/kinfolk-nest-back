@@ -223,7 +223,9 @@ async function haalAfsprakenOp(
     }
   }
 
-  return afspraken;
+  afspraken.sort((a, b) => a.start.localeCompare(b.start));
+  return afspraken.slice(0, MAX_AFSPRAKEN_PER_AGENDA);
+
 }
 
 function json(body: unknown, status = 200) {
