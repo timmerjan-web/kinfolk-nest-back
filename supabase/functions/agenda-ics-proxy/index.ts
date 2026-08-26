@@ -20,6 +20,9 @@ const VOORUIT_DAGEN = 60;
 // Per terugkerende afspraak: hoeveel herhalingen we hoogstens bekijken.
 const MAX_ITERATIES = 200;
 const MAX_AFSPRAKEN_PER_AGENDA = 300;
+// Werkgrens tijdens het verzamelen; pas achteraf sorteren en afkappen.
+const MAX_VERZAMELD = 2000;
+
 // Grote agenda's bevatten soms duizenden losse afspraken; losse afspraken
 // zijn goedkoop, dus deze grens ligt ruim boven een normale gezinsagenda.
 const MAX_VEVENTS = 8000;
