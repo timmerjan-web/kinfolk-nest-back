@@ -1,10 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Pin, Trash2 } from "lucide-react";
+import { Pencil, Pin, Share2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, SectionCard } from "@/components/app-shell";
 import { RequireGezin } from "@/components/require-auth";
 import { PrikbordForm } from "@/components/prikbord-form";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { foutTekst } from "@/lib/errors";
@@ -14,6 +17,7 @@ import {
   listPrikbord,
   signedUrl,
   togglePin,
+  updatePrikbordItem,
   type PrikbordItem,
 } from "@/lib/prikbord";
 
@@ -33,6 +37,11 @@ function PrikbordPage() {
   const [leden, setLeden] = useState<{ id: string; naam: string }[]>([]);
   const [actieveTag, setActieveTag] = useState<string | null>(null);
   const [bezig, setBezig] = useState(false);
+  const [bewerkId, setBewerkId] = useState<string | null>(null);
+  const [bewerkTekst, setBewerkTekst] = useState("");
+  const [bewerkTags, setBewerkTags] = useState("");
+  const [bewerkFotoVerwijderen, setBewerkFotoVerwijderen] = useState(false);
+  const [bewerkBezig, setBewerkBezig] = useState(false);
 
   const laad = () => {
     listPrikbord()
@@ -111,6 +120,57 @@ function PrikbordPage() {
     }
   };
 
+  const startBewerken = (item: PrikbordItem) => {
+    setBewerkId(item.id);
+    setBewerkTekst(item.tekst);
+    setBewerkTags(item.tags.join(", "));
+    setBewerkFotoVerwijderen(false);
+  };
+
+  const annulerenBewerken = () => setBewerkId(null);
+
+  const opslaanBewerking = async (item: PrikbordItem) => {
+    const tekst = bewerkTekst.trim();
+    if (!tekst) return;
+    const tags = bewerkTags
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
+    setBewerkBezig(true);
+    try {
+      await updatePrikbordItem(item, tekst, tags, bewerkFotoVerwijderen);
+      setBewerkId(null);
+      laad();
+    } catch (err) {
+      toast.error(foutTekst(err, "Opslaan mislukt."));
+    } finally {
+      setBewerkBezig(false);
+    }
+  };
+
+  const delen = async (item: PrikbordItem) => {
+    try {
+      const url = item.storage_pad ? urls[item.id] : undefined;
+      if (navigator.share) {
+        if (url) {
+          const blob = await (await fetch(url)).blob();
+          const bestand = new File([blob], "prikbord.jpg", { type: blob.type || "image/jpeg" });
+          if (navigator.canShare?.({ files: [bestand] })) {
+            await navigator.share({ text: item.tekst, files: [bestand] });
+            return;
+          }
+        }
+        await navigator.share({ text: item.tekst });
+      } else {
+        await navigator.clipboard.writeText(item.tekst);
+        toast.success("Tekst gekopieerd naar klembord.");
+      }
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") return;
+      toast.error(foutTekst(err, "Delen mislukt."));
+    }
+  };
+
   return (
     <AppShell title="Prikbord" subtitle="Voor het hele gezin">
       <div className="mb-3">
@@ -160,54 +220,112 @@ function PrikbordPage() {
                 item.vastgepind ? "border-primary bg-primary/5" : "border-border bg-card"
               }`}
             >
-              <div className="mb-1 flex items-start justify-between gap-2">
-                <p className="whitespace-pre-line text-sm">{item.tekst}</p>
-                <div className="flex shrink-0 gap-1">
-                  <button
-                    onClick={() => void pin(item)}
-                    aria-label={item.vastgepind ? "Losmaken" : "Vastpinnen"}
-                    className={item.vastgepind ? "text-primary" : "text-muted-foreground"}
-                  >
-                    <Pin className="h-3.5 w-3.5" />
-                  </button>
-                  <button
-                    onClick={() => void verwijderen(item)}
-                    aria-label="Verwijderen"
-                    className="text-muted-foreground hover:text-destructive"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              {item.storage_pad && urls[item.id] && (
-                <img
-                  src={urls[item.id]}
-                  alt=""
-                  className="mb-2 max-h-64 w-full rounded-lg object-cover"
-                />
-              )}
-
-              {item.tags.length > 0 && (
-                <div className="mb-1 flex flex-wrap gap-1">
-                  {item.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground"
+              {bewerkId === item.id ? (
+                <div className="space-y-2">
+                  <Textarea
+                    value={bewerkTekst}
+                    onChange={(e) => setBewerkTekst(e.target.value)}
+                    rows={3}
+                  />
+                  <Input
+                    value={bewerkTags}
+                    onChange={(e) => setBewerkTags(e.target.value)}
+                    placeholder="Tags, met komma's gescheiden (optioneel)"
+                  />
+                  {item.storage_pad && (
+                    <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <input
+                        type="checkbox"
+                        checked={bewerkFotoVerwijderen}
+                        onChange={(e) => setBewerkFotoVerwijderen(e.target.checked)}
+                      />
+                      Foto verwijderen
+                    </label>
+                  )}
+                  <div className="flex gap-2">
+                    <Button variant="secondary" onClick={annulerenBewerken} className="flex-1">
+                      Annuleren
+                    </Button>
+                    <Button
+                      onClick={() => void opslaanBewerking(item)}
+                      disabled={bewerkBezig || !bewerkTekst.trim()}
+                      className="flex-1"
                     >
-                      #{tag}
-                    </span>
-                  ))}
+                      {bewerkBezig ? "Bezig…" : "Opslaan"}
+                    </Button>
+                  </div>
                 </div>
-              )}
+              ) : (
+                <>
+                  <div className="mb-1 flex items-start justify-between gap-2">
+                    <button
+                      onClick={() => startBewerken(item)}
+                      className="whitespace-pre-line text-left text-sm"
+                    >
+                      {item.tekst}
+                    </button>
+                    <div className="flex shrink-0 gap-1">
+                      <button
+                        onClick={() => startBewerken(item)}
+                        aria-label="Bewerken"
+                        className="text-muted-foreground"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => void delen(item)}
+                        aria-label="Delen"
+                        className="text-muted-foreground"
+                      >
+                        <Share2 className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => void pin(item)}
+                        aria-label={item.vastgepind ? "Losmaken" : "Vastpinnen"}
+                        className={item.vastgepind ? "text-primary" : "text-muted-foreground"}
+                      >
+                        <Pin className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => void verwijderen(item)}
+                        aria-label="Verwijderen"
+                        className="text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
 
-              <p className="text-[11px] text-muted-foreground">
-                {leden.find((l) => l.id === item.created_by)?.naam ?? "Gezinslid"} ·{" "}
-                {new Date(item.created_at).toLocaleDateString("nl-NL", {
-                  day: "numeric",
-                  month: "short",
-                })}
-              </p>
+                  {item.storage_pad && urls[item.id] && (
+                    <img
+                      src={urls[item.id]}
+                      alt=""
+                      className="mb-2 max-h-64 w-full rounded-lg object-cover"
+                    />
+                  )}
+
+                  {item.tags.length > 0 && (
+                    <div className="mb-1 flex flex-wrap gap-1">
+                      {item.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground"
+                        >
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  <p className="text-[11px] text-muted-foreground">
+                    {leden.find((l) => l.id === item.created_by)?.naam ?? "Gezinslid"} ·{" "}
+                    {new Date(item.created_at).toLocaleDateString("nl-NL", {
+                      day: "numeric",
+                      month: "short",
+                    })}
+                  </p>
+                </>
+              )}
             </li>
           ))}
         </ul>

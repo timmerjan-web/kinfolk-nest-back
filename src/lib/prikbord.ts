@@ -46,6 +46,27 @@ export async function createPrikbordItem(
   return data;
 }
 
+export async function updatePrikbordItem(
+  item: PrikbordItem,
+  tekst: string,
+  tags: string[],
+  fotoVerwijderen: boolean,
+) {
+  let storagePad = item.storage_pad;
+  if (fotoVerwijderen && item.storage_pad) {
+    await supabase.storage.from(BUCKET).remove([item.storage_pad]);
+    storagePad = null;
+  }
+  const { data, error } = await supabase
+    .from("prikbord_items")
+    .update({ tekst, tags, storage_pad: storagePad })
+    .eq("id", item.id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
 export async function togglePin(id: string, vastgepind: boolean) {
   const { error } = await supabase.from("prikbord_items").update({ vastgepind }).eq("id", id);
   if (error) throw error;
