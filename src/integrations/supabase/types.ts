@@ -58,47 +58,6 @@ export type Database = {
           },
         ]
       }
-      verjaardagen: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          gezin_id: string
-          geboortedatum: string
-          geboortejaar: number | null
-          id: string
-          naam: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          gezin_id: string
-          geboortedatum: string
-          geboortejaar?: number | null
-          id?: string
-          naam: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          gezin_id?: string
-          geboortedatum?: string
-          geboortejaar?: number | null
-          id?: string
-          naam?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "verjaardagen_gezin_id_fkey"
-            columns: ["gezin_id"]
-            isOneToOne: false
-            referencedRelation: "gezinnen"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       agenda_koppelingen: {
         Row: {
           created_at: string
@@ -454,6 +413,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "recepten_gezin_id_fkey"
+            columns: ["gezin_id"]
+            isOneToOne: false
+            referencedRelation: "gezinnen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      verjaardagen: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          geboortedatum: string
+          geboortejaar: number | null
+          gezin_id: string
+          id: string
+          naam: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          geboortedatum: string
+          geboortejaar?: number | null
+          gezin_id: string
+          id?: string
+          naam: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          geboortedatum?: string
+          geboortejaar?: number | null
+          gezin_id?: string
+          id?: string
+          naam?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verjaardagen_gezin_id_fkey"
             columns: ["gezin_id"]
             isOneToOne: false
             referencedRelation: "gezinnen"

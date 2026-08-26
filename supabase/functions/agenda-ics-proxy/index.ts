@@ -19,7 +19,13 @@ const CORS_HEADERS = {
 };
 
 const VOORUIT_DAGEN = 60;
-const MAX_OCCURRENCES = 500;
+// Per terugkerende afspraak: hoeveel herhalingen we hoogstens bekijken
+// (iteraties vóór "nu" tellen mee — anders loopt een dagelijkse serie uit
+// 2015 duizenden keren door en tikt de Edge Function tegen de CPU-limiet).
+const MAX_ITERATIES = 400;
+const MAX_AFSPRAKEN_PER_AGENDA = 300;
+// Grote iCal-exports (megabytes) volledig parsen kost te veel CPU.
+const MAX_ICAL_BYTES = 2_000_000;
 
 type ExterneAfspraak = { titel: string; start: string; eind: string; heleDag: boolean };
 type Resultaat = {
@@ -103,6 +109,7 @@ async function haalAfsprakenOp(icalUrl: string, nu: Date, tot: Date): Promise<Ex
   const resp = await fetch(icalUrl);
   if (!resp.ok) throw new Error(`Agenda niet bereikbaar (HTTP ${resp.status}).`);
   const tekst = await resp.text();
+  if (tekst.length > MAX_ICAL_BYTES) throw new Error("Agenda is te groot om te verwerken.");
 
   const jcal = ICAL.parse(tekst);
   const component = new ICAL.Component(jcal);
@@ -111,6 +118,7 @@ async function haalAfsprakenOp(icalUrl: string, nu: Date, tot: Date): Promise<Ex
   const afspraken: ExterneAfspraak[] = [];
 
   for (const vevent of vevents) {
+    if (afspraken.length >= MAX_AFSPRAKEN_PER_AGENDA) break;
     try {
       const event = new ICAL.Event(vevent);
       const voegToe = (start: Date, eind: Date) => {
@@ -123,17 +131,25 @@ async function haalAfsprakenOp(icalUrl: string, nu: Date, tot: Date): Promise<Ex
       };
 
       if (event.isRecurring()) {
+        // Start de iterator zo dicht mogelijk bij "nu": ical.js loopt anders
+        // vanaf DTSTART (soms jaren terug) alle herhalingen af.
         const iterator = event.iterator();
         let next;
-        let aantal = 0;
-        while ((next = iterator.next()) && aantal < MAX_OCCURRENCES) {
-          aantal++;
-          const details = event.getOccurrenceDetails(next);
-          const start = details.startDate.toJSDate();
-          const eind = details.endDate.toJSDate();
+        let iteraties = 0;
+        while ((next = iterator.next())) {
+          if (++iteraties > MAX_ITERATIES) break;
+          const start = next.toJSDate();
           if (start > tot) break;
+          // Goedkope voorfilter: getOccurrenceDetails is duur, dus alleen
+          // uitvoeren voor herhalingen die binnen het venster kunnen vallen.
+          if (start.getTime() < nu.getTime() - 24 * 60 * 60 * 1000) continue;
+          const details = event.getOccurrenceDetails(next);
+          const echteStart = details.startDate.toJSDate();
+          const eind = details.endDate.toJSDate();
+          if (echteStart > tot) break;
           if (eind < nu) continue;
-          voegToe(start, eind);
+          voegToe(echteStart, eind);
+          if (afspraken.length >= MAX_AFSPRAKEN_PER_AGENDA) break;
         }
       } else {
         const start = event.startDate?.toJSDate();

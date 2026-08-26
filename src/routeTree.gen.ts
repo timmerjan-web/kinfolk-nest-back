@@ -18,6 +18,7 @@ import { Route as GezinRouteImport } from './routes/gezin'
 import { Route as KlusjesRouteImport } from './routes/klusjes'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PrikbordRouteImport } from './routes/prikbord'
+import { Route as VerjaardagenRouteImport } from './routes/verjaardagen'
 import { Route as WeekmenuRouteImport } from './routes/weekmenu'
 import { Route as ReceptenIndexRouteImport } from './routes/recepten/index'
 import { Route as ReceptenReceptIdRouteImport } from './routes/recepten/$receptId'
@@ -68,6 +69,11 @@ const PrikbordRoute = PrikbordRouteImport.update({
   path: '/prikbord',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VerjaardagenRoute = VerjaardagenRouteImport.update({
+  id: '/verjaardagen',
+  path: '/verjaardagen',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WeekmenuRoute = WeekmenuRouteImport.update({
   id: '/weekmenu',
   path: '/weekmenu',
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/klusjes': typeof KlusjesRoute
   '/onboarding': typeof OnboardingRoute
   '/prikbord': typeof PrikbordRoute
+  '/verjaardagen': typeof VerjaardagenRoute
   '/weekmenu': typeof WeekmenuRoute
   '/recepten/$receptId': typeof ReceptenReceptIdRoute
   '/recepten/nieuw': typeof ReceptenNieuwRoute
@@ -114,6 +121,7 @@ export interface FileRoutesByTo {
   '/klusjes': typeof KlusjesRoute
   '/onboarding': typeof OnboardingRoute
   '/prikbord': typeof PrikbordRoute
+  '/verjaardagen': typeof VerjaardagenRoute
   '/weekmenu': typeof WeekmenuRoute
   '/recepten/$receptId': typeof ReceptenReceptIdRoute
   '/recepten/nieuw': typeof ReceptenNieuwRoute
@@ -130,6 +138,7 @@ export interface FileRoutesById {
   '/klusjes': typeof KlusjesRoute
   '/onboarding': typeof OnboardingRoute
   '/prikbord': typeof PrikbordRoute
+  '/verjaardagen': typeof VerjaardagenRoute
   '/weekmenu': typeof WeekmenuRoute
   '/recepten/$receptId': typeof ReceptenReceptIdRoute
   '/recepten/nieuw': typeof ReceptenNieuwRoute
@@ -147,6 +156,7 @@ export interface FileRouteTypes {
     | '/klusjes'
     | '/onboarding'
     | '/prikbord'
+    | '/verjaardagen'
     | '/weekmenu'
     | '/recepten/$receptId'
     | '/recepten/nieuw'
@@ -162,6 +172,7 @@ export interface FileRouteTypes {
     | '/klusjes'
     | '/onboarding'
     | '/prikbord'
+    | '/verjaardagen'
     | '/weekmenu'
     | '/recepten/$receptId'
     | '/recepten/nieuw'
@@ -177,6 +188,7 @@ export interface FileRouteTypes {
     | '/klusjes'
     | '/onboarding'
     | '/prikbord'
+    | '/verjaardagen'
     | '/weekmenu'
     | '/recepten/$receptId'
     | '/recepten/nieuw'
@@ -193,6 +205,7 @@ export interface RootRouteChildren {
   KlusjesRoute: typeof KlusjesRoute
   OnboardingRoute: typeof OnboardingRoute
   PrikbordRoute: typeof PrikbordRoute
+  VerjaardagenRoute: typeof VerjaardagenRoute
   WeekmenuRoute: typeof WeekmenuRoute
   ReceptenReceptIdRoute: typeof ReceptenReceptIdRoute
   ReceptenNieuwRoute: typeof ReceptenNieuwRoute
@@ -264,6 +277,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrikbordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/verjaardagen': {
+      id: '/verjaardagen'
+      path: '/verjaardagen'
+      fullPath: '/verjaardagen'
+      preLoaderRoute: typeof VerjaardagenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/weekmenu': {
       id: '/weekmenu'
       path: '/weekmenu'
@@ -305,6 +325,7 @@ const rootRouteChildren: RootRouteChildren = {
   KlusjesRoute: KlusjesRoute,
   OnboardingRoute: OnboardingRoute,
   PrikbordRoute: PrikbordRoute,
+  VerjaardagenRoute: VerjaardagenRoute,
   WeekmenuRoute: WeekmenuRoute,
   ReceptenReceptIdRoute: ReceptenReceptIdRoute,
   ReceptenNieuwRoute: ReceptenNieuwRoute,
