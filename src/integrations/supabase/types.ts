@@ -106,6 +106,44 @@ export type Database = {
           },
         ]
       }
+      dagelijkse_fotos: {
+        Row: {
+          bijschrift: string | null
+          created_at: string
+          datum: string
+          gebruiker_id: string
+          gezin_id: string
+          id: string
+          storage_pad: string
+        }
+        Insert: {
+          bijschrift?: string | null
+          created_at?: string
+          datum: string
+          gebruiker_id: string
+          gezin_id: string
+          id?: string
+          storage_pad: string
+        }
+        Update: {
+          bijschrift?: string | null
+          created_at?: string
+          datum?: string
+          gebruiker_id?: string
+          gezin_id?: string
+          id?: string
+          storage_pad?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dagelijkse_fotos_gezin_id_fkey"
+            columns: ["gezin_id"]
+            isOneToOne: false
+            referencedRelation: "gezinnen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gezin_uitnodigingen: {
         Row: {
           code: string
