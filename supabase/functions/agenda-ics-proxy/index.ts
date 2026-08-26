@@ -20,10 +20,15 @@ const VOORUIT_DAGEN = 60;
 // Per terugkerende afspraak: hoeveel herhalingen we hoogstens bekijken.
 const MAX_ITERATIES = 200;
 const MAX_AFSPRAKEN_PER_AGENDA = 300;
-// Grote agenda's bevatten soms duizenden losse afspraken.
-const MAX_VEVENTS = 1500;
-// Grote iCal-exports (megabytes) volledig parsen kost te veel CPU.
-const MAX_ICAL_BYTES = 2_000_000;
+// Werkgrens tijdens het verzamelen; pas achteraf sorteren en afkappen.
+const MAX_VERZAMELD = 2000;
+
+// Grote agenda's bevatten soms duizenden losse afspraken; losse afspraken
+// zijn goedkoop, dus deze grens ligt ruim boven een normale gezinsagenda.
+const MAX_VEVENTS = 8000;
+// Grote iCal-exports volledig parsen kost te veel CPU.
+const MAX_ICAL_BYTES = 5_000_000;
+
 // Totaal rekenbudget voor alle agenda's samen (ms).
 const TIJD_BUDGET_MS = 6000;
 
@@ -133,7 +138,7 @@ async function haalAfsprakenOp(
   const venstervanaf = new Date(nu.getTime() - 24 * 60 * 60 * 1000);
 
   for (const vevent of vevents) {
-    if (afspraken.length >= MAX_AFSPRAKEN_PER_AGENDA) break;
+    if (afspraken.length >= MAX_VERZAMELD) break;
     if (Date.now() > deadline) break;
     try {
       const event = new ICAL.Event(vevent);
@@ -148,20 +153,49 @@ async function haalAfsprakenOp(
 
       if (event.isRecurring()) {
         // Series die al helemaal voorbij zijn: meteen overslaan.
-        const rrule = vevent.getFirstPropertyValue("rrule") as {
-          until?: { toJSDate(): Date };
-        } | null;
+        const rrule = vevent.getFirstPropertyValue("rrule") as
+          | {
+              until?: { toJSDate(): Date };
+              freq?: string;
+              interval?: number;
+              parts?: Record<string, unknown>;
+            }
+          | null;
         const until = rrule?.until?.toJSDate?.();
         if (until && until < nu) continue;
 
-        // Start de iterator bij "nu" in plaats van bij DTSTART, anders loopt
-        // ical.js alle herhalingen sinds jaren terug één voor één af.
+        // Vooruitspoelen naar een ÉCHTE herhaling dicht bij nu: dtstart plus
+        // n hele periodes. Zo blijven dag en uur exact kloppen (een willekeurig
+        // moment meegeven zou de begintijd van de serie overschrijven), maar
+        // hoeven we niet alle herhalingen sinds jaren terug af te lopen.
+        let startVanaf: unknown = undefined;
+        try {
+          const dtstart = event.startDate;
+          const freq = rrule?.freq;
+          const interval = rrule?.interval && rrule.interval > 0 ? rrule.interval : 1;
+          const eenvoudig = !rrule?.parts || Object.keys(rrule.parts).length === 0;
+          const periodeSec =
+            freq === "DAILY" ? 86400 * interval : freq === "WEEKLY" ? 604800 * interval : 0;
+          if (dtstart && periodeSec > 0 && (freq === "WEEKLY" || eenvoudig)) {
+            const verschilSec = (venstervanaf.getTime() - dtstart.toJSDate().getTime()) / 1000;
+            const n = Math.floor(verschilSec / periodeSec);
+            if (n > 0) {
+              const kandidaat = dtstart.clone();
+              kandidaat.addDuration(ICAL.Duration.fromSeconds(n * periodeSec));
+              startVanaf = kandidaat;
+            }
+          }
+        } catch {
+          startVanaf = undefined;
+        }
+
         let iterator;
         try {
-          iterator = event.iterator(ICAL.Time.fromJSDate(venstervanaf, true));
+          iterator = startVanaf ? event.iterator(startVanaf) : event.iterator();
         } catch {
           iterator = event.iterator();
         }
+
         let next;
         let iteraties = 0;
         while ((next = iterator.next())) {
@@ -177,7 +211,7 @@ async function haalAfsprakenOp(
           if (echteStart > tot) break;
           if (eind < nu) continue;
           voegToe(echteStart, eind);
-          if (afspraken.length >= MAX_AFSPRAKEN_PER_AGENDA) break;
+          if (afspraken.length >= MAX_VERZAMELD) break;
         }
       } else {
         const start = event.startDate?.toJSDate();
@@ -192,7 +226,9 @@ async function haalAfsprakenOp(
     }
   }
 
-  return afspraken;
+  afspraken.sort((a, b) => a.start.localeCompare(b.start));
+  return afspraken.slice(0, MAX_AFSPRAKEN_PER_AGENDA);
+
 }
 
 function json(body: unknown, status = 200) {
