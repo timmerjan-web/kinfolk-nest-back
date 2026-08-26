@@ -148,20 +148,49 @@ async function haalAfsprakenOp(
 
       if (event.isRecurring()) {
         // Series die al helemaal voorbij zijn: meteen overslaan.
-        const rrule = vevent.getFirstPropertyValue("rrule") as {
-          until?: { toJSDate(): Date };
-        } | null;
+        const rrule = vevent.getFirstPropertyValue("rrule") as
+          | {
+              until?: { toJSDate(): Date };
+              freq?: string;
+              interval?: number;
+              parts?: Record<string, unknown>;
+            }
+          | null;
         const until = rrule?.until?.toJSDate?.();
         if (until && until < nu) continue;
 
-        // Start de iterator bij "nu" in plaats van bij DTSTART, anders loopt
-        // ical.js alle herhalingen sinds jaren terug één voor één af.
+        // Vooruitspoelen naar een ÉCHTE herhaling dicht bij nu: dtstart plus
+        // n hele periodes. Zo blijven dag en uur exact kloppen (een willekeurig
+        // moment meegeven zou de begintijd van de serie overschrijven), maar
+        // hoeven we niet alle herhalingen sinds jaren terug af te lopen.
+        let startVanaf: unknown = undefined;
+        try {
+          const dtstart = event.startDate;
+          const freq = rrule?.freq;
+          const interval = rrule?.interval && rrule.interval > 0 ? rrule.interval : 1;
+          const eenvoudig = !rrule?.parts || Object.keys(rrule.parts).length === 0;
+          const periodeSec =
+            freq === "DAILY" ? 86400 * interval : freq === "WEEKLY" ? 604800 * interval : 0;
+          if (dtstart && periodeSec > 0 && (freq === "WEEKLY" || eenvoudig)) {
+            const verschilSec = (venstervanaf.getTime() - dtstart.toJSDate().getTime()) / 1000;
+            const n = Math.floor(verschilSec / periodeSec);
+            if (n > 0) {
+              const kandidaat = dtstart.clone();
+              kandidaat.addDuration(ICAL.Duration.fromSeconds(n * periodeSec));
+              startVanaf = kandidaat;
+            }
+          }
+        } catch {
+          startVanaf = undefined;
+        }
+
         let iterator;
         try {
-          iterator = event.iterator(ICAL.Time.fromJSDate(venstervanaf, true));
+          iterator = startVanaf ? event.iterator(startVanaf) : event.iterator();
         } catch {
           iterator = event.iterator();
         }
+
         let next;
         let iteraties = 0;
         while ((next = iterator.next())) {
