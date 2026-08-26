@@ -7,9 +7,7 @@
 // Gebruikt de service-role om agenda_koppelingen te lezen buiten RLS
 // om (nodig om ook de links van ándere gezinsleden te zien), maar
 // scoopt dat altijd op het gezin_id dat hoort bij de meegestuurde
-// gebruiker-JWT — nooit een ander gezin. SUPABASE_URL/ANON_KEY/
-// SERVICE_ROLE_KEY worden automatisch door Supabase in elke Edge
-// Function-omgeving gezet, geen handmatige secrets nodig.
+// gebruiker-JWT — nooit een ander gezin.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import ICAL from "npm:ical.js@2.1.0";
 
@@ -19,13 +17,15 @@ const CORS_HEADERS = {
 };
 
 const VOORUIT_DAGEN = 60;
-// Per terugkerende afspraak: hoeveel herhalingen we hoogstens bekijken
-// (iteraties vóór "nu" tellen mee — anders loopt een dagelijkse serie uit
-// 2015 duizenden keren door en tikt de Edge Function tegen de CPU-limiet).
-const MAX_ITERATIES = 400;
+// Per terugkerende afspraak: hoeveel herhalingen we hoogstens bekijken.
+const MAX_ITERATIES = 200;
 const MAX_AFSPRAKEN_PER_AGENDA = 300;
+// Grote agenda's bevatten soms duizenden losse afspraken.
+const MAX_VEVENTS = 1500;
 // Grote iCal-exports (megabytes) volledig parsen kost te veel CPU.
 const MAX_ICAL_BYTES = 2_000_000;
+// Totaal rekenbudget voor alle agenda's samen (ms).
+const TIJD_BUDGET_MS = 6000;
 
 type ExterneAfspraak = { titel: string; start: string; eind: string; heleDag: boolean };
 type Resultaat = {
@@ -75,11 +75,12 @@ Deno.serve(async (req) => {
 
     const nu = new Date();
     const tot = new Date(nu.getTime() + VOORUIT_DAGEN * 24 * 60 * 60 * 1000);
+    const deadline = Date.now() + TIJD_BUDGET_MS;
 
     const resultaten: Resultaat[] = await Promise.all(
       (koppelingen ?? []).map(async (koppeling) => {
         try {
-          const afspraken = await haalAfsprakenOp(koppeling.ical_url, nu, tot);
+          const afspraken = await haalAfsprakenOp(koppeling.ical_url, nu, tot, deadline);
           return {
             gebruiker_id: koppeling.gebruiker_id,
             naam: naamVoor(koppeling.gebruiker_id),
@@ -105,20 +106,32 @@ Deno.serve(async (req) => {
   }
 });
 
-async function haalAfsprakenOp(icalUrl: string, nu: Date, tot: Date): Promise<ExterneAfspraak[]> {
+async function haalAfsprakenOp(
+  icalUrl: string,
+  nu: Date,
+  tot: Date,
+  deadline: number,
+): Promise<ExterneAfspraak[]> {
   const resp = await fetch(icalUrl);
   if (!resp.ok) throw new Error(`Agenda niet bereikbaar (HTTP ${resp.status}).`);
+  const aangekondigdeLengte = Number(resp.headers.get("content-length") ?? 0);
+  if (aangekondigdeLengte > MAX_ICAL_BYTES) {
+    await resp.body?.cancel();
+    throw new Error("Agenda is te groot om te verwerken.");
+  }
   const tekst = await resp.text();
   if (tekst.length > MAX_ICAL_BYTES) throw new Error("Agenda is te groot om te verwerken.");
 
   const jcal = ICAL.parse(tekst);
   const component = new ICAL.Component(jcal);
-  const vevents = component.getAllSubcomponents("vevent");
+  const vevents = component.getAllSubcomponents("vevent").slice(0, MAX_VEVENTS);
 
   const afspraken: ExterneAfspraak[] = [];
+  const venstervanaf = new Date(nu.getTime() - 24 * 60 * 60 * 1000);
 
   for (const vevent of vevents) {
     if (afspraken.length >= MAX_AFSPRAKEN_PER_AGENDA) break;
+    if (Date.now() > deadline) break;
     try {
       const event = new ICAL.Event(vevent);
       const voegToe = (start: Date, eind: Date) => {
@@ -131,18 +144,30 @@ async function haalAfsprakenOp(icalUrl: string, nu: Date, tot: Date): Promise<Ex
       };
 
       if (event.isRecurring()) {
-        // Start de iterator zo dicht mogelijk bij "nu": ical.js loopt anders
-        // vanaf DTSTART (soms jaren terug) alle herhalingen af.
-        const iterator = event.iterator();
+        // Series die al helemaal voorbij zijn: meteen overslaan.
+        const rrule = vevent.getFirstPropertyValue("rrule") as
+          | { until?: { toJSDate(): Date } }
+          | null;
+        const until = rrule?.until?.toJSDate?.();
+        if (until && until < nu) continue;
+
+        // Start de iterator bij "nu" in plaats van bij DTSTART, anders loopt
+        // ical.js alle herhalingen sinds jaren terug één voor één af.
+        let iterator;
+        try {
+          iterator = event.iterator(ICAL.Time.fromJSDate(venstervanaf, true));
+        } catch {
+          iterator = event.iterator();
+        }
         let next;
         let iteraties = 0;
         while ((next = iterator.next())) {
           if (++iteraties > MAX_ITERATIES) break;
+          if ((iteraties & 31) === 0 && Date.now() > deadline) break;
           const start = next.toJSDate();
           if (start > tot) break;
-          // Goedkope voorfilter: getOccurrenceDetails is duur, dus alleen
-          // uitvoeren voor herhalingen die binnen het venster kunnen vallen.
-          if (start.getTime() < nu.getTime() - 24 * 60 * 60 * 1000) continue;
+          // Goedkope voorfilter: getOccurrenceDetails is duur.
+          if (start.getTime() < venstervanaf.getTime()) continue;
           const details = event.getOccurrenceDetails(next);
           const echteStart = details.startDate.toJSDate();
           const eind = details.endDate.toJSDate();
