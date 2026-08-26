@@ -4,6 +4,7 @@ import { CalendarClock, ChefHat, Gift, ListChecks } from "lucide-react";
 import { AppShell, SectionCard } from "@/components/app-shell";
 import { RequireGezin } from "@/components/require-auth";
 import { FotoVanDeDag } from "@/components/foto-van-de-dag";
+import { PrikbordPreview } from "@/components/prikbord-preview";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toDatumString, type WeekmenuItem } from "@/lib/weekmenu";
@@ -164,6 +165,8 @@ function TodayPage() {
           </ul>
         </SectionCard>
       )}
+
+      <PrikbordPreview />
     </AppShell>
   );
 }

@@ -5,34 +5,11 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { toDatumString } from "@/lib/weekmenu";
+import { verkleinAfbeelding } from "@/lib/afbeelding";
 
 export type DagelijkseFoto = Tables<"dagelijkse_fotos">;
 
 const BUCKET = "dagelijkse-fotos";
-
-async function verkleinAfbeelding(
-  bestand: File,
-  maxAfmeting = 1600,
-  kwaliteit = 0.8,
-): Promise<Blob> {
-  const bitmap = await createImageBitmap(bestand);
-  const schaal = Math.min(1, maxAfmeting / Math.max(bitmap.width, bitmap.height));
-  const breedte = Math.round(bitmap.width * schaal);
-  const hoogte = Math.round(bitmap.height * schaal);
-  const canvas = document.createElement("canvas");
-  canvas.width = breedte;
-  canvas.height = hoogte;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Canvas wordt niet ondersteund in deze browser.");
-  ctx.drawImage(bitmap, 0, 0, breedte, hoogte);
-  return await new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error("Foto comprimeren mislukt."))),
-      "image/jpeg",
-      kwaliteit,
-    );
-  });
-}
 
 export async function uploadFotoVanVandaag(
   gezinId: string,

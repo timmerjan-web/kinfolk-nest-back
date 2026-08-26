@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      prikbord_items: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          gezin_id: string
+          id: string
+          storage_pad: string | null
+          tags: string[]
+          tekst: string
+          updated_at: string
+          vastgepind: boolean
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          gezin_id: string
+          id?: string
+          storage_pad?: string | null
+          tags?: string[]
+          tekst: string
+          updated_at?: string
+          vastgepind?: boolean
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          gezin_id?: string
+          id?: string
+          storage_pad?: string | null
+          tags?: string[]
+          tekst?: string
+          updated_at?: string
+          vastgepind?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prikbord_items_gezin_id_fkey"
+            columns: ["gezin_id"]
+            isOneToOne: false
+            referencedRelation: "gezinnen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agenda_items: {
         Row: {
           created_at: string
