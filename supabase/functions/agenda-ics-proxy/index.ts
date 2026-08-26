@@ -211,7 +211,7 @@ async function haalAfsprakenOp(
           if (echteStart > tot) break;
           if (eind < nu) continue;
           voegToe(echteStart, eind);
-          if (afspraken.length >= MAX_AFSPRAKEN_PER_AGENDA) break;
+          if (afspraken.length >= MAX_VERZAMELD) break;
         }
       } else {
         const start = event.startDate?.toJSDate();
