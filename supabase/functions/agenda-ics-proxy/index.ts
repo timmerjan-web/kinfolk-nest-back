@@ -50,8 +50,11 @@ Deno.serve(async (req) => {
     const asUser = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
     });
-    const { data: userData, error: userError } = await asUser.auth.getUser();
-    if (userError || !userData.user) return json({ error: "Niet ingelogd." }, 401);
+    const jwt = authHeader.replace(/^Bearer\s+/i, "");
+    const { data: userData, error: userError } = await asUser.auth.getUser(jwt);
+    if (userError || !userData.user) {
+      return json({ error: userError?.message ?? "Niet ingelogd." }, 401);
+    }
 
     const { data: profiel, error: profielError } = await asUser
       .from("profiles")
@@ -145,9 +148,9 @@ async function haalAfsprakenOp(
 
       if (event.isRecurring()) {
         // Series die al helemaal voorbij zijn: meteen overslaan.
-        const rrule = vevent.getFirstPropertyValue("rrule") as
-          | { until?: { toJSDate(): Date } }
-          | null;
+        const rrule = vevent.getFirstPropertyValue("rrule") as {
+          until?: { toJSDate(): Date };
+        } | null;
         const until = rrule?.until?.toJSDate?.();
         if (until && until < nu) continue;
 
