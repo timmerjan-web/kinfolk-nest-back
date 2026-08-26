@@ -138,7 +138,7 @@ async function haalAfsprakenOp(
   const venstervanaf = new Date(nu.getTime() - 24 * 60 * 60 * 1000);
 
   for (const vevent of vevents) {
-    if (afspraken.length >= MAX_AFSPRAKEN_PER_AGENDA) break;
+    if (afspraken.length >= MAX_VERZAMELD) break;
     if (Date.now() > deadline) break;
     try {
       const event = new ICAL.Event(vevent);
