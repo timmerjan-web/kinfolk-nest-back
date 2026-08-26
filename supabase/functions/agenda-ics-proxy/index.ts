@@ -19,7 +19,13 @@ const CORS_HEADERS = {
 };
 
 const VOORUIT_DAGEN = 60;
-const MAX_OCCURRENCES = 500;
+// Per terugkerende afspraak: hoeveel herhalingen we hoogstens bekijken
+// (iteraties vóór "nu" tellen mee — anders loopt een dagelijkse serie uit
+// 2015 duizenden keren door en tikt de Edge Function tegen de CPU-limiet).
+const MAX_ITERATIES = 400;
+const MAX_AFSPRAKEN_PER_AGENDA = 300;
+// Grote iCal-exports (megabytes) volledig parsen kost te veel CPU.
+const MAX_ICAL_BYTES = 2_000_000;
 
 type ExterneAfspraak = { titel: string; start: string; eind: string; heleDag: boolean };
 type Resultaat = {
