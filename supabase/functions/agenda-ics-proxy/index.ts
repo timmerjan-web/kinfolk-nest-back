@@ -159,14 +159,12 @@ async function haalAfsprakenOp(
 
       if (event.isRecurring()) {
         // Series die al helemaal voorbij zijn: meteen overslaan.
-        const rrule = vevent.getFirstPropertyValue("rrule") as
-          | {
-              until?: { toJSDate(): Date };
-              freq?: string;
-              interval?: number;
-              parts?: Record<string, unknown>;
-            }
-          | null;
+        const rrule = vevent.getFirstPropertyValue("rrule") as {
+          until?: { toJSDate(): Date };
+          freq?: string;
+          interval?: number;
+          parts?: Record<string, unknown>;
+        } | null;
         const until = rrule?.until?.toJSDate?.();
         if (until && until < nu) continue;
 
@@ -227,7 +225,6 @@ async function haalAfsprakenOp(
 
   afspraken.sort((a, b) => a.start.localeCompare(b.start));
   return afspraken.slice(0, MAX_AFSPRAKEN_PER_AGENDA);
-
 }
 
 function filterIcalVoorVenster(tekst: string, nu: Date, tot: Date): string {
@@ -252,13 +249,24 @@ function filterIcalVoorVenster(tekst: string, nu: Date, tot: Date): string {
 }
 
 function leesIcalDatum(blok: string, eigenschap: "DTSTART" | "DTEND"): Date | null {
-  const match = blok.match(new RegExp(`(?:^|\\r?\\n)${eigenschap}(?:;[^:\\r\\n]*)?:([^\\r\\n]+)`, "i"));
+  const match = blok.match(
+    new RegExp(`(?:^|\\r?\\n)${eigenschap}(?:;[^:\\r\\n]*)?:([^\\r\\n]+)`, "i"),
+  );
   if (!match?.[1]) return null;
   const waarde = match[1].trim();
   const datumMatch = waarde.match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})?Z?)?/);
   if (!datumMatch) return null;
   const [, jaar, maand, dag, uur = "00", minuut = "00", seconde = "00"] = datumMatch;
-  return new Date(Date.UTC(Number(jaar), Number(maand) - 1, Number(dag), Number(uur), Number(minuut), Number(seconde)));
+  return new Date(
+    Date.UTC(
+      Number(jaar),
+      Number(maand) - 1,
+      Number(dag),
+      Number(uur),
+      Number(minuut),
+      Number(seconde),
+    ),
+  );
 }
 
 function json(body: unknown, status = 200) {

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
@@ -114,6 +114,12 @@ function KlusjesPage() {
         </button>
       }
     >
+      <div className="mb-3 text-right">
+        <Link to="/klus-sjablonen" className="text-xs text-muted-foreground underline">
+          Klussencatalogus beheren
+        </Link>
+      </div>
+
       {nieuwOpen && (
         <div className="mb-3">
           <KlusjeForm
