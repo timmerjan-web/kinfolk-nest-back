@@ -279,6 +279,55 @@ export type Database = {
         }
         Relationships: []
       }
+      klus_voltooiingen: {
+        Row: {
+          gezin_id: string
+          id: string
+          klusje_id: string
+          sjabloon_id: string | null
+          toegewezen_aan: string | null
+          voltooid_op: string
+        }
+        Insert: {
+          gezin_id: string
+          id?: string
+          klusje_id: string
+          sjabloon_id?: string | null
+          toegewezen_aan?: string | null
+          voltooid_op?: string
+        }
+        Update: {
+          gezin_id?: string
+          id?: string
+          klusje_id?: string
+          sjabloon_id?: string | null
+          toegewezen_aan?: string | null
+          voltooid_op?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "klus_voltooiingen_gezin_id_fkey"
+            columns: ["gezin_id"]
+            isOneToOne: false
+            referencedRelation: "gezinnen"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "klus_voltooiingen_klusje_id_fkey"
+            columns: ["klusje_id"]
+            isOneToOne: false
+            referencedRelation: "klusjes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "klus_voltooiingen_sjabloon_id_fkey"
+            columns: ["sjabloon_id"]
+            isOneToOne: false
+            referencedRelation: "klus_sjablonen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       klusjes: {
         Row: {
           afgerond: boolean
@@ -288,7 +337,9 @@ export type Database = {
           created_by: string | null
           deadline: string | null
           gezin_id: string
+          herhaling: string | null
           id: string
+          sjabloon_id: string | null
           titel: string
           toegewezen_aan: string | null
           updated_at: string
@@ -301,7 +352,9 @@ export type Database = {
           created_by?: string | null
           deadline?: string | null
           gezin_id: string
+          herhaling?: string | null
           id?: string
+          sjabloon_id?: string | null
           titel: string
           toegewezen_aan?: string | null
           updated_at?: string
@@ -314,7 +367,9 @@ export type Database = {
           created_by?: string | null
           deadline?: string | null
           gezin_id?: string
+          herhaling?: string | null
           id?: string
+          sjabloon_id?: string | null
           titel?: string
           toegewezen_aan?: string | null
           updated_at?: string
@@ -325,6 +380,13 @@ export type Database = {
             columns: ["gezin_id"]
             isOneToOne: false
             referencedRelation: "gezinnen"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "klusjes_sjabloon_id_fkey"
+            columns: ["sjabloon_id"]
+            isOneToOne: false
+            referencedRelation: "klus_sjablonen"
             referencedColumns: ["id"]
           },
         ]

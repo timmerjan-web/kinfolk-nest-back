@@ -17,6 +17,7 @@ import {
   type Klusje,
   type KlusjeInvoer,
 } from "@/lib/klusjes";
+import { listKlusSjablonen, type KlusSjabloon } from "@/lib/klusSjablonen";
 import { toDatumString } from "@/lib/weekmenu";
 
 export const Route = createFileRoute("/klusjes")({
@@ -32,6 +33,7 @@ function KlusjesPage() {
   const { profile, user } = useAuth();
   const [klusjes, setKlusjes] = useState<Klusje[] | null>(null);
   const [leden, setLeden] = useState<{ id: string; naam: string }[]>([]);
+  const [sjablonen, setSjablonen] = useState<KlusSjabloon[]>([]);
   const [nieuwOpen, setNieuwOpen] = useState(false);
   const [bezig, setBezig] = useState(false);
 
@@ -55,6 +57,12 @@ function KlusjesPage() {
       .then(({ data }) => setLeden(data ?? []));
   }, [profile?.gezin_id]);
 
+  useEffect(() => {
+    listKlusSjablonen()
+      .then(setSjablonen)
+      .catch(() => setSjablonen([]));
+  }, []);
+
   const toevoegen = async (invoer: KlusjeInvoer) => {
     if (!profile?.gezin_id || !user) return;
     setBezig(true);
@@ -71,13 +79,28 @@ function KlusjesPage() {
   };
 
   const toggle = async (klusje: Klusje) => {
-    if (!user) return;
+    if (!user || !profile?.gezin_id) return;
     const nieuw = !klusje.afgerond;
+
+    if (nieuw && klusje.herhaling) {
+      // Terugkerend: na afvinken meteen een nieuwe cyclus met een
+      // nieuwe deadline — geen simpele optimistic flip, gewoon de
+      // echte (gereset) rij ophalen.
+      try {
+        await toggleAfgerond(klusje, nieuw, profile.gezin_id, user.id);
+        toast.success("Klusje afgerond — nieuwe cyclus ingepland.");
+        laad();
+      } catch (err) {
+        toast.error(foutTekst(err, "Bijwerken mislukt."));
+      }
+      return;
+    }
+
     setKlusjes((huidig) =>
       (huidig ?? []).map((k) => (k.id === klusje.id ? { ...k, afgerond: nieuw } : k)),
     );
     try {
-      await toggleAfgerond(klusje.id, nieuw, user.id);
+      await toggleAfgerond(klusje, nieuw, profile.gezin_id, user.id);
     } catch (err) {
       toast.error(foutTekst(err, "Bijwerken mislukt."));
       setKlusjes((huidig) =>
@@ -124,6 +147,7 @@ function KlusjesPage() {
         <div className="mb-3">
           <KlusjeForm
             leden={leden}
+            sjablonen={sjablonen}
             bezig={bezig}
             onOpslaan={toevoegen}
             onAnnuleren={() => setNieuwOpen(false)}
@@ -198,6 +222,14 @@ function KlusjeRij({
     ? leden.find((l) => l.id === klusje.toegewezen_aan)?.naam
     : undefined;
   const teLaat = !klusje.afgerond && !!klusje.deadline && klusje.deadline < vandaag;
+  const herhalingLabel =
+    klusje.herhaling === "dagelijks"
+      ? "Dagelijks"
+      : klusje.herhaling === "wekelijks"
+        ? "Wekelijks"
+        : klusje.herhaling === "maandelijks"
+          ? "Maandelijks"
+          : undefined;
 
   return (
     <li className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-muted">
@@ -214,11 +246,13 @@ function KlusjeRij({
         <p className={`text-sm ${klusje.afgerond ? "text-muted-foreground line-through" : ""}`}>
           {klusje.titel}
         </p>
-        {(klusje.deadline ?? naam) && (
+        {(klusje.deadline ?? naam ?? herhalingLabel) && (
           <p className={`text-[11px] ${teLaat ? "text-destructive" : "text-muted-foreground"}`}>
             {klusje.deadline && formatteerDeadline(klusje.deadline)}
             {klusje.deadline && naam && " · "}
             {naam}
+            {(klusje.deadline ?? naam) && herhalingLabel && " · "}
+            {herhalingLabel}
           </p>
         )}
       </div>
