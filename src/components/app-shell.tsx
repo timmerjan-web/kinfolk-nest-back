@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { GezinsappLogo } from "./logo";
+import { NotificationBell } from "./notification-bell";
 import { useAuth } from "@/lib/auth";
 
 const primaryNav = [
@@ -60,6 +61,7 @@ export function AppShell({
             </Link>
             <div className="flex items-center gap-2">
               {action}
+              <NotificationBell />
               <div className="relative">
                 <button
                   onClick={() => setMenuOpen((o) => !o)}

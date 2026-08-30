@@ -279,6 +279,44 @@ export type Database = {
         }
         Relationships: []
       }
+      meldingen: {
+        Row: {
+          created_at: string
+          gelezen: boolean
+          gezin_id: string
+          id: string
+          payload: Json
+          profiel_id: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          gelezen?: boolean
+          gezin_id: string
+          id?: string
+          payload?: Json
+          profiel_id: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          gelezen?: boolean
+          gezin_id?: string
+          id?: string
+          payload?: Json
+          profiel_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meldingen_gezin_id_fkey"
+            columns: ["gezin_id"]
+            isOneToOne: false
+            referencedRelation: "gezinnen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       klus_voltooiingen: {
         Row: {
           gezin_id: string
