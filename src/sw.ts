@@ -35,7 +35,7 @@ registerRoute(
   ({ url, sameOrigin }) => sameOrigin && /\.(?:js|css|woff2?)$/.test(url.pathname),
   new CacheFirst({
     cacheName: "static-assets",
-    plugins: [new ExpirationPlugin({ maxEntries: 80, maxAgeSeconds: 60 * 60 * 24 * 30 })],
+    plugins: [new ExpirationPlugin({ maxEntries: 80, maxAgeSeconds: 60 * 60 * 24 * 30 })] as any[],
   }),
 );
 
@@ -43,7 +43,7 @@ registerRoute(
   ({ request }) => request.destination === "image",
   new StaleWhileRevalidate({
     cacheName: "images",
-    plugins: [new ExpirationPlugin({ maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 30 })],
+    plugins: [new ExpirationPlugin({ maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 30 })] as any[],
   }),
 );
 
@@ -54,7 +54,7 @@ registerRoute(
     plugins: [
       new ExpirationPlugin({ maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 14 }),
       new CacheableResponsePlugin({ statuses: [0, 200] }),
-    ],
+    ] as any[],
   }),
 );
 
@@ -76,7 +76,7 @@ self.addEventListener("push", (event) => {
 
   event.waitUntil(
     self.registration.showNotification(titel, {
-      body: data.body,
+      body: data.body ?? "",
       icon: `${self.registration.scope}icon-192.png`,
       badge: `${self.registration.scope}icon-192.png`,
       data: { url: doelUrl },
