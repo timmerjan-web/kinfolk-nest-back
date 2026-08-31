@@ -37,15 +37,35 @@ async function unregisterMatching() {
   }
 }
 
-export async function registerServiceWorker() {
+export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   const { refused } = isRefusedContext();
   if (refused) {
     await unregisterMatching();
-    return;
+    return null;
   }
   try {
-    await navigator.serviceWorker.register(SW_PATH, { scope: import.meta.env.BASE_URL });
+    return await navigator.serviceWorker.register(SW_PATH, { scope: import.meta.env.BASE_URL });
   } catch (err) {
     console.warn("[pwa] service worker registratie mislukt", err);
+    return null;
   }
 }
+
+// Zelfde als hierboven, maar fouten worden doorgegeven (voor de
+// meldingen-instelling, die de gebruiker een duidelijke reden toont).
+export async function registerServiceWorkerStrikt(): Promise<ServiceWorkerRegistration> {
+  const { refused, reason } = isRefusedContext();
+  if (refused) {
+    throw new Error(
+      reason === "iframe"
+        ? "Meldingen werken niet in de preview. Open de gepubliceerde app in een eigen browsertabblad."
+        : "Meldingen zijn hier niet beschikbaar.",
+    );
+  }
+  const bestand = await fetch(SW_PATH, { method: "GET", cache: "no-store" }).catch(() => null);
+  if (!bestand || !bestand.ok) {
+    throw new Error("De achtergrondservice voor meldingen is niet beschikbaar op deze versie.");
+  }
+  return navigator.serviceWorker.register(SW_PATH, { scope: import.meta.env.BASE_URL });
+}
+
