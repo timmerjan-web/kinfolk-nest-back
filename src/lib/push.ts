@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 // publiek. De privésleutel staat alleen server-side (Edge Function-
 // secret VAPID_PRIVATE_KEY), nooit hier.
 const VAPID_PUBLIC_KEY =
-  "BJH87fvXUMFNi0fYBhMRcWdr4-J9LqPl8uU1iQhxAsbbJPXnlnYDieaqw8H4dnBjyp3JlX5wF6jSsNWqFq-jbbQ";
+  "BPIe7iOR_Tx20hexHTx15weylVGTwKfnEOgnnURTkOYKCNqfKGQcCcw5K5g16ffJbZ4iXhfv7P0HpB-ywnyUPac";
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);

@@ -10,7 +10,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import webpush from "npm:web-push@3.6.7";
 
 const VAPID_PUBLIC_KEY =
-  "BJH87fvXUMFNi0fYBhMRcWdr4-J9LqPl8uU1iQhxAsbbJPXnlnYDieaqw8H4dnBjyp3JlX5wF6jSsNWqFq-jbbQ";
+  "BPIe7iOR_Tx20hexHTx15weylVGTwKfnEOgnnURTkOYKCNqfKGQcCcw5K5g16ffJbZ4iXhfv7P0HpB-ywnyUPac";
 
 type WebhookPayload = {
   type: "INSERT" | "UPDATE" | "DELETE";
