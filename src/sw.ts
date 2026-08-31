@@ -68,7 +68,7 @@ self.addEventListener("push", (event) => {
   try {
     data = event.data?.json() ?? {};
   } catch {
-    data = { body: event.data?.text() };
+    data = { body: event.data?.text() ?? "" };
   }
 
   const titel = data.title ?? "Gezinsapp";
