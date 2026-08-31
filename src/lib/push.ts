@@ -102,11 +102,21 @@ export async function schakelPushIn(gezinId: string, userId: string): Promise<vo
   const { registerServiceWorkerStrikt } = await import("@/lib/register-sw");
   const bestaande = await navigator.serviceWorker.getRegistration();
   const registratie = await wachtOpActivatie(bestaande ?? (await registerServiceWorkerStrikt()));
-  const abonnement = await registratie.pushManager.subscribe({
 
-    userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-  });
+  const bestaandAbonnement = await registratie.pushManager.getSubscription();
+  let abonnement: PushSubscription;
+  try {
+    abonnement =
+      bestaandAbonnement ??
+      (await registratie.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+      }));
+  } catch (err) {
+    const reden = err instanceof Error ? err.message : String(err);
+    throw new Error(`Aanmelden bij de meldingsdienst mislukte: ${reden}`);
+  }
+
 
   const json = abonnement.toJSON();
   const p256dh = json.keys?.["p256dh"];
