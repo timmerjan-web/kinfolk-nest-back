@@ -6,6 +6,7 @@ import { AppShell, SectionCard } from "@/components/app-shell";
 import { RequireGezin } from "@/components/require-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PushInstellingen } from "@/components/push-instellingen";
 import { refreshProfile, useAuth, type Rol } from "@/lib/auth";
 import { maakUitnodigingAan } from "@/lib/household";
 import { supabase } from "@/integrations/supabase/client";
@@ -186,6 +187,10 @@ function GezinPage() {
             </li>
           ))}
         </ul>
+      </SectionCard>
+
+      <SectionCard className="mb-3">
+        <PushInstellingen />
       </SectionCard>
 
       {isOuder ? (
