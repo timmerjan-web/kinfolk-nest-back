@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { Copy, UserPlus } from "lucide-react";
+import { Copy, Gift, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, SectionCard } from "@/components/app-shell";
 import { RequireGezin } from "@/components/require-auth";
@@ -120,6 +120,14 @@ function GezinPage() {
 
   return (
     <AppShell title="Gezin" subtitle={gezinNaam || undefined}>
+      <Link
+        to="/verlanglijst"
+        className="mb-3 flex items-center gap-2 rounded-xl border border-border bg-card p-3 text-sm shadow-card hover:bg-muted"
+      >
+        <Gift className="h-4 w-4 text-muted-foreground" />
+        Verlanglijstjes bekijken
+      </Link>
+
       <SectionCard className="mb-3">
         <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Leden

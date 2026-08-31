@@ -279,6 +279,53 @@ export type Database = {
         }
         Relationships: []
       }
+      verlanglijst_items: {
+        Row: {
+          created_at: string
+          gebruiker_id: string
+          gekocht: boolean
+          gekocht_door: string | null
+          gezin_id: string
+          id: string
+          notitie: string | null
+          prijs: number | null
+          titel: string
+          url: string | null
+        }
+        Insert: {
+          created_at?: string
+          gebruiker_id: string
+          gekocht?: boolean
+          gekocht_door?: string | null
+          gezin_id: string
+          id?: string
+          notitie?: string | null
+          prijs?: number | null
+          titel: string
+          url?: string | null
+        }
+        Update: {
+          created_at?: string
+          gebruiker_id?: string
+          gekocht?: boolean
+          gekocht_door?: string | null
+          gezin_id?: string
+          id?: string
+          notitie?: string | null
+          prijs?: number | null
+          titel?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verlanglijst_items_gezin_id_fkey"
+            columns: ["gezin_id"]
+            isOneToOne: false
+            referencedRelation: "gezinnen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meldingen: {
         Row: {
           created_at: string
