@@ -15,10 +15,12 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BoodschappenRouteImport } from './routes/boodschappen'
 import { Route as FotosRouteImport } from './routes/fotos'
 import { Route as GezinRouteImport } from './routes/gezin'
+import { Route as KlusSjablonenRouteImport } from './routes/klus-sjablonen'
 import { Route as KlusjesRouteImport } from './routes/klusjes'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PrikbordRouteImport } from './routes/prikbord'
 import { Route as VerjaardagenRouteImport } from './routes/verjaardagen'
+import { Route as VerlanglijstRouteImport } from './routes/verlanglijst'
 import { Route as WeekmenuRouteImport } from './routes/weekmenu'
 import { Route as ReceptenIndexRouteImport } from './routes/recepten/index'
 import { Route as ReceptenReceptIdRouteImport } from './routes/recepten/$receptId'
@@ -54,6 +56,11 @@ const GezinRoute = GezinRouteImport.update({
   path: '/gezin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KlusSjablonenRoute = KlusSjablonenRouteImport.update({
+  id: '/klus-sjablonen',
+  path: '/klus-sjablonen',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const KlusjesRoute = KlusjesRouteImport.update({
   id: '/klusjes',
   path: '/klusjes',
@@ -72,6 +79,11 @@ const PrikbordRoute = PrikbordRouteImport.update({
 const VerjaardagenRoute = VerjaardagenRouteImport.update({
   id: '/verjaardagen',
   path: '/verjaardagen',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerlanglijstRoute = VerlanglijstRouteImport.update({
+  id: '/verlanglijst',
+  path: '/verlanglijst',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WeekmenuRoute = WeekmenuRouteImport.update({
@@ -102,10 +114,12 @@ export interface FileRoutesByFullPath {
   '/boodschappen': typeof BoodschappenRoute
   '/fotos': typeof FotosRoute
   '/gezin': typeof GezinRoute
+  '/klus-sjablonen': typeof KlusSjablonenRoute
   '/klusjes': typeof KlusjesRoute
   '/onboarding': typeof OnboardingRoute
   '/prikbord': typeof PrikbordRoute
   '/verjaardagen': typeof VerjaardagenRoute
+  '/verlanglijst': typeof VerlanglijstRoute
   '/weekmenu': typeof WeekmenuRoute
   '/recepten/$receptId': typeof ReceptenReceptIdRoute
   '/recepten/nieuw': typeof ReceptenNieuwRoute
@@ -118,10 +132,12 @@ export interface FileRoutesByTo {
   '/boodschappen': typeof BoodschappenRoute
   '/fotos': typeof FotosRoute
   '/gezin': typeof GezinRoute
+  '/klus-sjablonen': typeof KlusSjablonenRoute
   '/klusjes': typeof KlusjesRoute
   '/onboarding': typeof OnboardingRoute
   '/prikbord': typeof PrikbordRoute
   '/verjaardagen': typeof VerjaardagenRoute
+  '/verlanglijst': typeof VerlanglijstRoute
   '/weekmenu': typeof WeekmenuRoute
   '/recepten/$receptId': typeof ReceptenReceptIdRoute
   '/recepten/nieuw': typeof ReceptenNieuwRoute
@@ -135,10 +151,12 @@ export interface FileRoutesById {
   '/boodschappen': typeof BoodschappenRoute
   '/fotos': typeof FotosRoute
   '/gezin': typeof GezinRoute
+  '/klus-sjablonen': typeof KlusSjablonenRoute
   '/klusjes': typeof KlusjesRoute
   '/onboarding': typeof OnboardingRoute
   '/prikbord': typeof PrikbordRoute
   '/verjaardagen': typeof VerjaardagenRoute
+  '/verlanglijst': typeof VerlanglijstRoute
   '/weekmenu': typeof WeekmenuRoute
   '/recepten/$receptId': typeof ReceptenReceptIdRoute
   '/recepten/nieuw': typeof ReceptenNieuwRoute
@@ -153,10 +171,12 @@ export interface FileRouteTypes {
     | '/boodschappen'
     | '/fotos'
     | '/gezin'
+    | '/klus-sjablonen'
     | '/klusjes'
     | '/onboarding'
     | '/prikbord'
     | '/verjaardagen'
+    | '/verlanglijst'
     | '/weekmenu'
     | '/recepten/$receptId'
     | '/recepten/nieuw'
@@ -169,10 +189,12 @@ export interface FileRouteTypes {
     | '/boodschappen'
     | '/fotos'
     | '/gezin'
+    | '/klus-sjablonen'
     | '/klusjes'
     | '/onboarding'
     | '/prikbord'
     | '/verjaardagen'
+    | '/verlanglijst'
     | '/weekmenu'
     | '/recepten/$receptId'
     | '/recepten/nieuw'
@@ -185,10 +207,12 @@ export interface FileRouteTypes {
     | '/boodschappen'
     | '/fotos'
     | '/gezin'
+    | '/klus-sjablonen'
     | '/klusjes'
     | '/onboarding'
     | '/prikbord'
     | '/verjaardagen'
+    | '/verlanglijst'
     | '/weekmenu'
     | '/recepten/$receptId'
     | '/recepten/nieuw'
@@ -202,10 +226,12 @@ export interface RootRouteChildren {
   BoodschappenRoute: typeof BoodschappenRoute
   FotosRoute: typeof FotosRoute
   GezinRoute: typeof GezinRoute
+  KlusSjablonenRoute: typeof KlusSjablonenRoute
   KlusjesRoute: typeof KlusjesRoute
   OnboardingRoute: typeof OnboardingRoute
   PrikbordRoute: typeof PrikbordRoute
   VerjaardagenRoute: typeof VerjaardagenRoute
+  VerlanglijstRoute: typeof VerlanglijstRoute
   WeekmenuRoute: typeof WeekmenuRoute
   ReceptenReceptIdRoute: typeof ReceptenReceptIdRoute
   ReceptenNieuwRoute: typeof ReceptenNieuwRoute
@@ -256,6 +282,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GezinRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/klus-sjablonen': {
+      id: '/klus-sjablonen'
+      path: '/klus-sjablonen'
+      fullPath: '/klus-sjablonen'
+      preLoaderRoute: typeof KlusSjablonenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/klusjes': {
       id: '/klusjes'
       path: '/klusjes'
@@ -282,6 +315,13 @@ declare module '@tanstack/react-router' {
       path: '/verjaardagen'
       fullPath: '/verjaardagen'
       preLoaderRoute: typeof VerjaardagenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verlanglijst': {
+      id: '/verlanglijst'
+      path: '/verlanglijst'
+      fullPath: '/verlanglijst'
+      preLoaderRoute: typeof VerlanglijstRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/weekmenu': {
@@ -322,10 +362,12 @@ const rootRouteChildren: RootRouteChildren = {
   BoodschappenRoute: BoodschappenRoute,
   FotosRoute: FotosRoute,
   GezinRoute: GezinRoute,
+  KlusSjablonenRoute: KlusSjablonenRoute,
   KlusjesRoute: KlusjesRoute,
   OnboardingRoute: OnboardingRoute,
   PrikbordRoute: PrikbordRoute,
   VerjaardagenRoute: VerjaardagenRoute,
+  VerlanglijstRoute: VerlanglijstRoute,
   WeekmenuRoute: WeekmenuRoute,
   ReceptenReceptIdRoute: ReceptenReceptIdRoute,
   ReceptenNieuwRoute: ReceptenNieuwRoute,
