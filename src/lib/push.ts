@@ -27,9 +27,39 @@ export function pushOndersteund(): boolean {
   );
 }
 
+// Push werkt alleen als de service worker daadwerkelijk geregistreerd
+// wordt: niet in dev en niet binnen een iframe (zoals de preview).
+export function pushMogelijkInDezeContext(): boolean {
+  if (!pushOndersteund()) return false;
+  if (!import.meta.env.PROD) return false;
+  try {
+    if (window.top !== window.self) return false;
+  } catch {
+    return false;
+  }
+  return true;
+}
+
+async function wachtOpServiceWorker(timeoutMs = 10000): Promise<ServiceWorkerRegistration> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise<never>((_, afwijzen) => {
+        timer = setTimeout(
+          () => afwijzen(new Error("De achtergrondservice voor meldingen reageert niet.")),
+          timeoutMs,
+        );
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 export async function huidigPushAbonnement(): Promise<PushSubscription | null> {
   if (!pushOndersteund()) return null;
-  const registratie = await navigator.serviceWorker.ready;
+  const registratie = await wachtOpServiceWorker(5000);
   return registratie.pushManager.getSubscription();
 }
 
