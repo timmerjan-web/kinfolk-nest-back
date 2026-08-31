@@ -57,37 +57,29 @@ async function wachtOpServiceWorker(timeoutMs = 10000): Promise<ServiceWorkerReg
   }
 }
 
-// Wacht tot een specifieke registratie een actieve worker heeft. Dit is
-// betrouwbaarder dan navigator.serviceWorker.ready, dat blijft hangen als
-// de pagina (nog) niet door een worker gecontroleerd wordt.
+// Wacht tot er een actieve worker is. Pollen is betrouwbaarder dan
+// statechange-events of navigator.serviceWorker.ready: die blijven soms
+// hangen of missen een overgang die al gebeurd is.
 async function wachtOpActivatie(
   registratie: ServiceWorkerRegistration,
   timeoutMs = 15000,
 ): Promise<ServiceWorkerRegistration> {
-  if (registratie.active) return registratie;
-  const worker = registratie.installing ?? registratie.waiting;
-  if (!worker) return wachtOpServiceWorker(timeoutMs);
-  await new Promise<void>((oplossen, afwijzen) => {
-    const timer = setTimeout(
-      () => afwijzen(new Error("De achtergrondservice voor meldingen reageert niet.")),
-      timeoutMs,
-    );
-    const check = () => {
-      if (worker.state === "activated" || registratie.active) {
-        clearTimeout(timer);
-        worker.removeEventListener("statechange", check);
-        oplossen();
-      } else if (worker.state === "redundant") {
-        clearTimeout(timer);
-        worker.removeEventListener("statechange", check);
-        afwijzen(new Error("De achtergrondservice voor meldingen kon niet starten."));
-      }
-    };
-    worker.addEventListener("statechange", check);
-    check();
-  });
-  return registratie;
+  const deadline = Date.now() + timeoutMs;
+  let huidige: ServiceWorkerRegistration | undefined = registratie;
+  while (Date.now() < deadline) {
+    if (huidige?.active) return huidige;
+    try {
+      await huidige?.update();
+    } catch {
+      /* ignore */
+    }
+    await new Promise((r) => setTimeout(r, 300));
+    huidige = (await navigator.serviceWorker.getRegistration()) ?? huidige;
+  }
+  if (huidige?.active) return huidige;
+  throw new Error("De achtergrondservice voor meldingen reageert niet.");
 }
+
 
 export async function huidigPushAbonnement(): Promise<PushSubscription | null> {
   if (!pushOndersteund()) return null;
