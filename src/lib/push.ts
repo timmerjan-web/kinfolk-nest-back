@@ -73,7 +73,13 @@ export async function schakelPushIn(gezinId: string, userId: string): Promise<vo
     throw new Error("Geen toestemming gekregen voor meldingen.");
   }
 
-  const registratie = await navigator.serviceWorker.ready;
+  const bestaande = await navigator.serviceWorker.getRegistration();
+  if (!bestaande) {
+    const { registerServiceWorker } = await import("@/lib/register-sw");
+    await registerServiceWorker();
+  }
+
+  const registratie = await wachtOpServiceWorker(10000);
   const abonnement = await registratie.pushManager.subscribe({
     userVisibleOnly: true,
     applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
