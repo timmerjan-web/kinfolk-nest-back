@@ -3,17 +3,27 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { foutTekst } from "@/lib/errors";
-import { huidigPushAbonnement, pushOndersteund, schakelPushIn, schakelPushUit } from "@/lib/push";
+import {
+  huidigPushAbonnement,
+  pushMogelijkInDezeContext,
+  pushOndersteund,
+  schakelPushIn,
+  schakelPushUit,
+} from "@/lib/push";
 
 export function PushInstellingen() {
   const { profile, user } = useAuth();
   const [ondersteund, setOndersteund] = useState(false);
+  const [mogelijk, setMogelijk] = useState(false);
   const [ingeschakeld, setIngeschakeld] = useState(false);
   const [bezig, setBezig] = useState(false);
 
   useEffect(() => {
     if (!pushOndersteund()) return;
     setOndersteund(true);
+    const kan = pushMogelijkInDezeContext();
+    setMogelijk(kan);
+    if (!kan) return;
     huidigPushAbonnement()
       .then((abonnement) => setIngeschakeld(!!abonnement))
       .catch(() => setIngeschakeld(false));
