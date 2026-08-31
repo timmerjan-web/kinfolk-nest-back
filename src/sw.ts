@@ -27,7 +27,7 @@ registerRoute(
   new NetworkFirst({
     cacheName: "html-pages",
     networkTimeoutSeconds: 4,
-    plugins: [new ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 60 * 60 * 24 * 7 })],
+    plugins: [new ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 60 * 60 * 24 * 7 })] as any[],
   }),
 );
 

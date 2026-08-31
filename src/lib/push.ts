@@ -50,8 +50,8 @@ export async function schakelPushIn(gezinId: string, userId: string): Promise<vo
   });
 
   const json = abonnement.toJSON();
-  const p256dh = json.keys?.p256dh;
-  const auth = json.keys?.auth;
+  const p256dh = json.keys?.["p256dh"];
+  const auth = json.keys?.["auth"];
   if (!json.endpoint || !p256dh || !auth) {
     throw new Error("Push-abonnement kon niet worden aangemaakt.");
   }
