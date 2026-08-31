@@ -63,13 +63,15 @@ export function PushInstellingen() {
       <div>
         <p className="text-sm font-medium">Pushmeldingen</p>
         <p className="text-xs text-muted-foreground">
-          Krijg een melding op dit toestel als je een klusje toegewezen krijgt.
+          {mogelijk
+            ? "Krijg een melding op dit toestel als je een klusje toegewezen krijgt."
+            : "Meldingen werken alleen in de gepubliceerde app, geopend in een eigen browsertabblad (niet in de preview)."}
         </p>
       </div>
       <Button
         size="sm"
         variant={ingeschakeld ? "secondary" : "default"}
-        disabled={bezig}
+        disabled={bezig || !mogelijk}
         onClick={() => void (ingeschakeld ? uitzetten() : aanzetten())}
       >
         {bezig ? "Bezig…" : ingeschakeld ? "Uit" : "Aan"}
