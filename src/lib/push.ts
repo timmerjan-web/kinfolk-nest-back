@@ -40,44 +40,42 @@ export function pushMogelijkInDezeContext(): boolean {
   return true;
 }
 
-async function wachtOpServiceWorker(timeoutMs = 10000): Promise<ServiceWorkerRegistration> {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  try {
-    return await Promise.race([
-      navigator.serviceWorker.ready,
-      new Promise<never>((_, afwijzen) => {
-        timer = setTimeout(
-          () => afwijzen(new Error("De achtergrondservice voor meldingen reageert niet.")),
-          timeoutMs,
-        );
-      }),
-    ]);
-  } finally {
-    if (timer) clearTimeout(timer);
-  }
-}
-
-// Wacht tot er een actieve worker is. Pollen is betrouwbaarder dan
-// statechange-events of navigator.serviceWorker.ready: die blijven soms
-// hangen of missen een overgang die al gebeurd is.
+// Wacht op de concrete worker van deze registratie. Daardoor zijn we niet
+// afhankelijk van navigator.serviceWorker.ready of gemiste globale events.
 async function wachtOpActivatie(
   registratie: ServiceWorkerRegistration,
-  timeoutMs = 15000,
+  timeoutMs = 20000,
 ): Promise<ServiceWorkerRegistration> {
-  const deadline = Date.now() + timeoutMs;
-  let huidige: ServiceWorkerRegistration | undefined = registratie;
-  while (Date.now() < deadline) {
-    if (huidige?.active) return huidige;
-    try {
-      await huidige?.update();
-    } catch {
-      /* ignore */
-    }
-    await new Promise((r) => setTimeout(r, 300));
-    huidige = (await navigator.serviceWorker.getRegistration()) ?? huidige;
-  }
-  if (huidige?.active) return huidige;
-  throw new Error("De achtergrondservice voor meldingen reageert niet.");
+  if (registratie.active) return registratie;
+
+  const worker = registratie.installing ?? registratie.waiting;
+  if (!worker) throw new Error("De achtergrondservice kon niet worden gestart.");
+
+  await new Promise<void>((resolve, reject) => {
+    const timer = window.setTimeout(() => {
+      opruimen();
+      reject(new Error("De achtergrondservice kon niet worden gestart."));
+    }, timeoutMs);
+
+    const controleer = () => {
+      if (worker.state === "activated") {
+        opruimen();
+        resolve();
+      } else if (worker.state === "redundant") {
+        opruimen();
+        reject(new Error("De achtergrondservice kon niet worden geïnstalleerd."));
+      }
+    };
+    const opruimen = () => {
+      window.clearTimeout(timer);
+      worker.removeEventListener("statechange", controleer);
+    };
+
+    worker.addEventListener("statechange", controleer);
+    controleer();
+  });
+
+  return registratie;
 }
 
 
@@ -99,9 +97,18 @@ export async function schakelPushIn(gezinId: string, userId: string): Promise<vo
     throw new Error("Geen toestemming gekregen voor meldingen.");
   }
 
-  const { registerServiceWorkerStrikt } = await import("@/lib/register-sw");
+  const { registerServiceWorkerStrikt, herstelServiceWorkerRegistratie } = await import(
+    "@/lib/register-sw"
+  );
   const bestaande = await navigator.serviceWorker.getRegistration();
-  const registratie = await wachtOpActivatie(bestaande ?? (await registerServiceWorkerStrikt()));
+  let registratie: ServiceWorkerRegistration;
+  try {
+    registratie = await wachtOpActivatie(bestaande ?? (await registerServiceWorkerStrikt()));
+  } catch {
+    // Een oude of half geïnstalleerde worker kan na een nieuwe publicatie
+    // blijven hangen. Ruim die één keer op en registreer de huidige versie.
+    registratie = await wachtOpActivatie(await herstelServiceWorkerRegistratie());
+  }
 
   const bestaandAbonnement = await registratie.pushManager.getSubscription();
   let abonnement: PushSubscription;
