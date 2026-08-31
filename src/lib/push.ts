@@ -57,9 +57,43 @@ async function wachtOpServiceWorker(timeoutMs = 10000): Promise<ServiceWorkerReg
   }
 }
 
+// Wacht tot een specifieke registratie een actieve worker heeft. Dit is
+// betrouwbaarder dan navigator.serviceWorker.ready, dat blijft hangen als
+// de pagina (nog) niet door een worker gecontroleerd wordt.
+async function wachtOpActivatie(
+  registratie: ServiceWorkerRegistration,
+  timeoutMs = 15000,
+): Promise<ServiceWorkerRegistration> {
+  if (registratie.active) return registratie;
+  const worker = registratie.installing ?? registratie.waiting;
+  if (!worker) return wachtOpServiceWorker(timeoutMs);
+  await new Promise<void>((oplossen, afwijzen) => {
+    const timer = setTimeout(
+      () => afwijzen(new Error("De achtergrondservice voor meldingen reageert niet.")),
+      timeoutMs,
+    );
+    const check = () => {
+      if (worker.state === "activated" || registratie.active) {
+        clearTimeout(timer);
+        worker.removeEventListener("statechange", check);
+        oplossen();
+      } else if (worker.state === "redundant") {
+        clearTimeout(timer);
+        worker.removeEventListener("statechange", check);
+        afwijzen(new Error("De achtergrondservice voor meldingen kon niet starten."));
+      }
+    };
+    worker.addEventListener("statechange", check);
+    check();
+  });
+  return registratie;
+}
+
 export async function huidigPushAbonnement(): Promise<PushSubscription | null> {
   if (!pushOndersteund()) return null;
-  const registratie = await wachtOpServiceWorker(5000);
+  const bestaande = await navigator.serviceWorker.getRegistration();
+  if (!bestaande) return null;
+  const registratie = await wachtOpActivatie(bestaande, 5000);
   return registratie.pushManager.getSubscription();
 }
 
@@ -73,14 +107,11 @@ export async function schakelPushIn(gezinId: string, userId: string): Promise<vo
     throw new Error("Geen toestemming gekregen voor meldingen.");
   }
 
+  const { registerServiceWorkerStrikt } = await import("@/lib/register-sw");
   const bestaande = await navigator.serviceWorker.getRegistration();
-  if (!bestaande) {
-    const { registerServiceWorker } = await import("@/lib/register-sw");
-    await registerServiceWorker();
-  }
-
-  const registratie = await wachtOpServiceWorker(10000);
+  const registratie = await wachtOpActivatie(bestaande ?? (await registerServiceWorkerStrikt()));
   const abonnement = await registratie.pushManager.subscribe({
+
     userVisibleOnly: true,
     applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
   });
