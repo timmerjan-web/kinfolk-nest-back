@@ -58,47 +58,6 @@ export type Database = {
           },
         ]
       }
-      klus_sjablonen: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          gezin_id: string
-          icoon: string
-          id: string
-          standaard_herhaling: string | null
-          titel: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          gezin_id: string
-          icoon?: string
-          id?: string
-          standaard_herhaling?: string | null
-          titel: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          gezin_id?: string
-          icoon?: string
-          id?: string
-          standaard_herhaling?: string | null
-          titel?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "klus_sjablonen_gezin_id_fkey"
-            columns: ["gezin_id"]
-            isOneToOne: false
-            referencedRelation: "gezinnen"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       agenda_koppelingen: {
         Row: {
           created_at: string
@@ -279,122 +238,40 @@ export type Database = {
         }
         Relationships: []
       }
-      verlanglijst_items: {
+      klus_sjablonen: {
         Row: {
           created_at: string
-          gebruiker_id: string
-          gekocht: boolean
-          gekocht_door: string | null
+          created_by: string | null
           gezin_id: string
+          icoon: string
           id: string
-          notitie: string | null
-          prijs: number | null
+          standaard_herhaling: string | null
           titel: string
-          url: string | null
+          updated_at: string
         }
         Insert: {
           created_at?: string
-          gebruiker_id: string
-          gekocht?: boolean
-          gekocht_door?: string | null
+          created_by?: string | null
           gezin_id: string
+          icoon?: string
           id?: string
-          notitie?: string | null
-          prijs?: number | null
+          standaard_herhaling?: string | null
           titel: string
-          url?: string | null
+          updated_at?: string
         }
         Update: {
           created_at?: string
-          gebruiker_id?: string
-          gekocht?: boolean
-          gekocht_door?: string | null
+          created_by?: string | null
           gezin_id?: string
+          icoon?: string
           id?: string
-          notitie?: string | null
-          prijs?: number | null
+          standaard_herhaling?: string | null
           titel?: string
-          url?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "verlanglijst_items_gezin_id_fkey"
-            columns: ["gezin_id"]
-            isOneToOne: false
-            referencedRelation: "gezinnen"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      push_abonnementen: {
-        Row: {
-          auth: string
-          created_at: string
-          endpoint: string
-          gebruiker_id: string
-          gezin_id: string
-          id: string
-          p256dh: string
-        }
-        Insert: {
-          auth: string
-          created_at?: string
-          endpoint: string
-          gebruiker_id: string
-          gezin_id: string
-          id?: string
-          p256dh: string
-        }
-        Update: {
-          auth?: string
-          created_at?: string
-          endpoint?: string
-          gebruiker_id?: string
-          gezin_id?: string
-          id?: string
-          p256dh?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "push_abonnementen_gezin_id_fkey"
-            columns: ["gezin_id"]
-            isOneToOne: false
-            referencedRelation: "gezinnen"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      meldingen: {
-        Row: {
-          created_at: string
-          gelezen: boolean
-          gezin_id: string
-          id: string
-          payload: Json
-          profiel_id: string
-          type: string
-        }
-        Insert: {
-          created_at?: string
-          gelezen?: boolean
-          gezin_id: string
-          id?: string
-          payload?: Json
-          profiel_id: string
-          type: string
-        }
-        Update: {
-          created_at?: string
-          gelezen?: boolean
-          gezin_id?: string
-          id?: string
-          payload?: Json
-          profiel_id?: string
-          type?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "meldingen_gezin_id_fkey"
+            foreignKeyName: "klus_sjablonen_gezin_id_fkey"
             columns: ["gezin_id"]
             isOneToOne: false
             referencedRelation: "gezinnen"
@@ -510,6 +387,44 @@ export type Database = {
             columns: ["sjabloon_id"]
             isOneToOne: false
             referencedRelation: "klus_sjablonen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meldingen: {
+        Row: {
+          created_at: string
+          gelezen: boolean
+          gezin_id: string
+          id: string
+          payload: Json
+          profiel_id: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          gelezen?: boolean
+          gezin_id: string
+          id?: string
+          payload?: Json
+          profiel_id: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          gelezen?: boolean
+          gezin_id?: string
+          id?: string
+          payload?: Json
+          profiel_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meldingen_gezin_id_fkey"
+            columns: ["gezin_id"]
+            isOneToOne: false
+            referencedRelation: "gezinnen"
             referencedColumns: ["id"]
           },
         ]
@@ -687,6 +602,53 @@ export type Database = {
           },
         ]
       }
+      verlanglijst_items: {
+        Row: {
+          created_at: string
+          gebruiker_id: string
+          gekocht: boolean
+          gekocht_door: string | null
+          gezin_id: string
+          id: string
+          notitie: string | null
+          prijs: number | null
+          titel: string
+          url: string | null
+        }
+        Insert: {
+          created_at?: string
+          gebruiker_id: string
+          gekocht?: boolean
+          gekocht_door?: string | null
+          gezin_id: string
+          id?: string
+          notitie?: string | null
+          prijs?: number | null
+          titel: string
+          url?: string | null
+        }
+        Update: {
+          created_at?: string
+          gebruiker_id?: string
+          gekocht?: boolean
+          gekocht_door?: string | null
+          gezin_id?: string
+          id?: string
+          notitie?: string | null
+          prijs?: number | null
+          titel?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verlanglijst_items_gezin_id_fkey"
+            columns: ["gezin_id"]
+            isOneToOne: false
+            referencedRelation: "gezinnen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       weekmenu_items: {
         Row: {
           created_at: string
@@ -758,6 +720,7 @@ export type Database = {
         Returns: string
       }
       heeft_eigen_foto_op: { Args: { _datum: string }; Returns: boolean }
+      klus_sjablonen_seed: { Args: { p_gezin_id: string }; Returns: undefined }
     }
     Enums: {
       app_rol: "ouder" | "kind"
