@@ -62,10 +62,15 @@ export async function registerServiceWorkerStrikt(): Promise<ServiceWorkerRegist
         : "Meldingen zijn hier niet beschikbaar.",
     );
   }
-  const bestand = await fetch(SW_PATH, { method: "GET", cache: "no-store" }).catch(() => null);
-  if (!bestand || !bestand.ok) {
-    throw new Error("De achtergrondservice voor meldingen is niet beschikbaar op deze versie.");
-  }
-  return navigator.serviceWorker.register(SW_PATH, { scope: import.meta.env.BASE_URL });
+  return navigator.serviceWorker.register(SW_PATH, {
+    scope: import.meta.env.BASE_URL,
+    updateViaCache: "none",
+  });
+}
+
+export async function herstelServiceWorkerRegistratie(): Promise<ServiceWorkerRegistration> {
+  const bestaande = await navigator.serviceWorker.getRegistration(import.meta.env.BASE_URL);
+  if (bestaande) await bestaande.unregister();
+  return registerServiceWorkerStrikt();
 }
 

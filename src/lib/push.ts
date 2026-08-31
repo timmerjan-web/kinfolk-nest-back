@@ -40,54 +40,44 @@ export function pushMogelijkInDezeContext(): boolean {
   return true;
 }
 
-async function wachtOpServiceWorker(timeoutMs = 10000): Promise<ServiceWorkerRegistration> {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  try {
-    return await Promise.race([
-      navigator.serviceWorker.ready,
-      new Promise<never>((_, afwijzen) => {
-        timer = setTimeout(
-          () => afwijzen(new Error("De achtergrondservice voor meldingen reageert niet.")),
-          timeoutMs,
-        );
-      }),
-    ]);
-  } finally {
-    if (timer) clearTimeout(timer);
-  }
-}
-
-// Wacht tot een specifieke registratie een actieve worker heeft. Dit is
-// betrouwbaarder dan navigator.serviceWorker.ready, dat blijft hangen als
-// de pagina (nog) niet door een worker gecontroleerd wordt.
+// Wacht op de concrete worker van deze registratie. Daardoor zijn we niet
+// afhankelijk van navigator.serviceWorker.ready of gemiste globale events.
 async function wachtOpActivatie(
   registratie: ServiceWorkerRegistration,
-  timeoutMs = 15000,
+  timeoutMs = 20000,
 ): Promise<ServiceWorkerRegistration> {
   if (registratie.active) return registratie;
+
   const worker = registratie.installing ?? registratie.waiting;
-  if (!worker) return wachtOpServiceWorker(timeoutMs);
-  await new Promise<void>((oplossen, afwijzen) => {
-    const timer = setTimeout(
-      () => afwijzen(new Error("De achtergrondservice voor meldingen reageert niet.")),
-      timeoutMs,
-    );
-    const check = () => {
-      if (worker.state === "activated" || registratie.active) {
-        clearTimeout(timer);
-        worker.removeEventListener("statechange", check);
-        oplossen();
+  if (!worker) throw new Error("De achtergrondservice kon niet worden gestart.");
+
+  await new Promise<void>((resolve, reject) => {
+    const timer = window.setTimeout(() => {
+      opruimen();
+      reject(new Error("De achtergrondservice kon niet worden gestart."));
+    }, timeoutMs);
+
+    const controleer = () => {
+      if (worker.state === "activated") {
+        opruimen();
+        resolve();
       } else if (worker.state === "redundant") {
-        clearTimeout(timer);
-        worker.removeEventListener("statechange", check);
-        afwijzen(new Error("De achtergrondservice voor meldingen kon niet starten."));
+        opruimen();
+        reject(new Error("De achtergrondservice kon niet worden geïnstalleerd."));
       }
     };
-    worker.addEventListener("statechange", check);
-    check();
+    const opruimen = () => {
+      window.clearTimeout(timer);
+      worker.removeEventListener("statechange", controleer);
+    };
+
+    worker.addEventListener("statechange", controleer);
+    controleer();
   });
+
   return registratie;
 }
+
 
 export async function huidigPushAbonnement(): Promise<PushSubscription | null> {
   if (!pushOndersteund()) return null;
@@ -107,14 +97,33 @@ export async function schakelPushIn(gezinId: string, userId: string): Promise<vo
     throw new Error("Geen toestemming gekregen voor meldingen.");
   }
 
-  const { registerServiceWorkerStrikt } = await import("@/lib/register-sw");
+  const { registerServiceWorkerStrikt, herstelServiceWorkerRegistratie } = await import(
+    "@/lib/register-sw"
+  );
   const bestaande = await navigator.serviceWorker.getRegistration();
-  const registratie = await wachtOpActivatie(bestaande ?? (await registerServiceWorkerStrikt()));
-  const abonnement = await registratie.pushManager.subscribe({
+  let registratie: ServiceWorkerRegistration;
+  try {
+    registratie = await wachtOpActivatie(bestaande ?? (await registerServiceWorkerStrikt()));
+  } catch {
+    // Een oude of half geïnstalleerde worker kan na een nieuwe publicatie
+    // blijven hangen. Ruim die één keer op en registreer de huidige versie.
+    registratie = await wachtOpActivatie(await herstelServiceWorkerRegistratie());
+  }
 
-    userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-  });
+  const bestaandAbonnement = await registratie.pushManager.getSubscription();
+  let abonnement: PushSubscription;
+  try {
+    abonnement =
+      bestaandAbonnement ??
+      (await registratie.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+      }));
+  } catch (err) {
+    const reden = err instanceof Error ? err.message : String(err);
+    throw new Error(`Aanmelden bij de meldingsdienst mislukte: ${reden}`);
+  }
+
 
   const json = abonnement.toJSON();
   const p256dh = json.keys?.["p256dh"];
