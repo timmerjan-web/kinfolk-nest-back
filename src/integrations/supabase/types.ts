@@ -511,6 +511,44 @@ export type Database = {
           },
         ]
       }
+      push_abonnementen: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          gebruiker_id: string
+          gezin_id: string
+          id: string
+          p256dh: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          gebruiker_id: string
+          gezin_id: string
+          id?: string
+          p256dh: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          gebruiker_id?: string
+          gezin_id?: string
+          id?: string
+          p256dh?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_abonnementen_gezin_id_fkey"
+            columns: ["gezin_id"]
+            isOneToOne: false
+            referencedRelation: "gezinnen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recepten: {
         Row: {
           bereidingstijd_minuten: number | null
