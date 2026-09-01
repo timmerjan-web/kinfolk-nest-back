@@ -4,7 +4,6 @@
 // kunnen afhandelen. De runtime-caching-regels hieronder zijn 1-op-1
 // overgenomen uit de vorige generateSW-config in vite.config.ts, zodat
 // het offline-/cachegedrag niet verandert.
-import { cleanupOutdatedCaches, precacheAndRoute } from "workbox-precaching";
 import { registerRoute } from "workbox-routing";
 import { CacheFirst, NetworkFirst, StaleWhileRevalidate } from "workbox-strategies";
 import { ExpirationPlugin } from "workbox-expiration";
@@ -13,14 +12,32 @@ import { clientsClaim } from "workbox-core";
 
 declare let self: ServiceWorkerGlobalScope;
 
+// injectManifest vereist ergens in de bron een verwijzing naar
+// self.__WB_MANIFEST als injectiepunt — die kant-en-klare lijst wordt
+// hier bewust niet doorgegeven aan precacheAndRoute()/een
+// PrecacheController. Workbox's eigen precache-install faalt namelijk
+// hard (de hele service worker-installatie mislukt) zodra ook maar één
+// van die bestanden niet op te halen is, en dat is onmogelijk van
+// buitenaf op te vangen (event.waitUntil() wordt al binnen in Workbox
+// zelf aangeroepen, vóórdat je zelf nog kunt ingrijpen) — precies de
+// oorzaak van "de achtergrondservice kon niet worden geïnstalleerd" bij
+// pushmeldingen aanzetten. De vier runtime-caching-regels hieronder
+// geven hetzelfde cachegedrag zonder dat risico: die falen per
+// opzichzelfstaand verzoek, nooit voor de hele installatie.
+declare global {
+  interface ServiceWorkerGlobalScope {
+    __WB_MANIFEST: unknown;
+  }
+}
+// console.info geeft een echt neveneffect, zodat minifiers deze regel
+// (en daarmee het injectiepunt) niet als dode code verwijderen.
+console.info("[sw] build-manifest (niet gebruikt voor precaching):", self.__WB_MANIFEST);
+
 // Komt overeen met het oude registerType: "autoUpdate" — een nieuwe
 // service worker neemt meteen het roer over, zonder te wachten tot
 // alle open tabbladen gesloten zijn.
 self.skipWaiting();
 clientsClaim();
-
-cleanupOutdatedCaches();
-precacheAndRoute(self.__WB_MANIFEST);
 
 registerRoute(
   ({ request }) => request.mode === "navigate",
