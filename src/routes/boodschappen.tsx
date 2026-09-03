@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { ChefHat, Plus, Trash2, X } from "lucide-react";
+import { ChefHat, Plus, ShoppingCart, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, SectionCard } from "@/components/app-shell";
 import { RequireGezin } from "@/components/require-auth";
@@ -139,21 +139,23 @@ function BoodschappenPage() {
             <Plus className="h-4 w-4" />
           </Button>
         </form>
-        <button
+        <Button
           onClick={() => void genereer()}
           disabled={genererend}
-          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-2 text-sm font-medium text-foreground disabled:opacity-60"
+          variant="secondary"
+          className="mt-3 w-full"
         >
           <ChefHat className="h-4 w-4" />
           {genererend ? "Bezig…" : "Genereer uit het weekmenu van deze week"}
-        </button>
+        </Button>
       </SectionCard>
 
       {items === null ? (
         <SectionCard className="text-center text-sm text-muted-foreground">Laden…</SectionCard>
       ) : openstaand.length === 0 && afgevinkt.length === 0 ? (
-        <SectionCard className="text-center text-sm text-muted-foreground">
-          Nog niets op de lijst.
+        <SectionCard className="flex flex-col items-center gap-2 py-6 text-center text-sm text-muted-foreground">
+          <ShoppingCart className="h-8 w-8 opacity-50" />
+          Nog niets op de lijst — voeg iets toe of genereer uit het weekmenu.
         </SectionCard>
       ) : (
         <>

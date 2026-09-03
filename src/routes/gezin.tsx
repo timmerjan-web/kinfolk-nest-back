@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { Copy, Gift, UserPlus } from "lucide-react";
+import { Copy, Gift, Pencil, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, SectionCard } from "@/components/app-shell";
 import { RequireGezin } from "@/components/require-auth";
@@ -34,6 +34,7 @@ function GezinPage() {
   const [opslaanBezig, setOpslaanBezig] = useState(false);
   const [eigenNaam, setEigenNaam] = useState("");
   const [naamOpslaanBezig, setNaamOpslaanBezig] = useState(false);
+  const [bewerken, setBewerken] = useState(false);
 
   const laadGezin = useCallback(async () => {
     if (!profile?.gezin_id) return;
@@ -59,39 +60,24 @@ function GezinPage() {
     setEigenNaam(eigen?.naam ?? "");
   }, [leden, user?.id]);
 
-  const opslaanNaam = async () => {
+  const opslaanEigenGegevens = async () => {
     if (!user || !eigenNaam.trim()) return;
     setNaamOpslaanBezig(true);
-    try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ naam: eigenNaam.trim() })
-        .eq("id", user.id);
-      if (error) throw error;
-      toast.success("Naam opgeslagen.");
-      await refreshProfile();
-      void laadGezin();
-    } catch (err) {
-      toast.error(foutTekst(err, "Opslaan mislukt."));
-    } finally {
-      setNaamOpslaanBezig(false);
-    }
-  };
-
-  const opslaanVerjaardag = async () => {
-    if (!user) return;
     setOpslaanBezig(true);
     try {
       const { error } = await supabase
         .from("profiles")
-        .update({ geboortedatum: eigenGeboortedatum || null })
+        .update({ naam: eigenNaam.trim(), geboortedatum: eigenGeboortedatum || null })
         .eq("id", user.id);
       if (error) throw error;
-      toast.success("Verjaardag opgeslagen.");
+      toast.success("Gegevens opgeslagen.");
+      await refreshProfile();
       void laadGezin();
+      setBewerken(false);
     } catch (err) {
       toast.error(foutTekst(err, "Opslaan mislukt."));
     } finally {
+      setNaamOpslaanBezig(false);
       setOpslaanBezig(false);
     }
   };
@@ -138,45 +124,58 @@ function GezinPage() {
             <li key={lid.id} className="rounded-lg border border-border px-3 py-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">{lid.naam}</span>
-                <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase text-muted-foreground">
-                  {lid.rol}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase text-muted-foreground">
+                    {lid.rol}
+                  </span>
+                  {lid.id === user?.id && !bewerken && (
+                    <button
+                      onClick={() => setBewerken(true)}
+                      aria-label="Naam en verjaardag bewerken"
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
               {lid.id === user?.id ? (
-                <div className="mt-2 space-y-2">
-                  <div className="flex items-center gap-2">
+                bewerken ? (
+                  <div className="mt-2 space-y-2">
                     <Input
                       value={eigenNaam}
                       onChange={(e) => setEigenNaam(e.target.value)}
                       placeholder="Jouw naam"
-                      className="h-8 flex-1 text-xs"
+                      className="h-8 text-xs"
                     />
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      disabled={naamOpslaanBezig || !eigenNaam.trim()}
-                      onClick={() => void opslaanNaam()}
-                    >
-                      Opslaan
-                    </Button>
-                  </div>
-                  <div className="flex items-center gap-2">
                     <Input
                       type="date"
                       value={eigenGeboortedatum}
                       onChange={(e) => setEigenGeboortedatum(e.target.value)}
-                      className="h-8 flex-1 text-xs"
+                      className="h-8 text-xs"
                     />
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      disabled={opslaanBezig}
-                      onClick={() => void opslaanVerjaardag()}
-                    >
-                      Opslaan
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        disabled={naamOpslaanBezig || opslaanBezig || !eigenNaam.trim()}
+                        onClick={() => void opslaanEigenGegevens()}
+                        className="flex-1"
+                      >
+                        {naamOpslaanBezig || opslaanBezig ? "Bezig…" : "Opslaan"}
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setBewerken(false)}>
+                        Annuleren
+                      </Button>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  lid.geboortedatum && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Verjaardag: {formatteerVerjaardag(lid.geboortedatum)}
+                    </p>
+                  )
+                )
               ) : (
                 lid.geboortedatum && (
                   <p className="mt-1 text-xs text-muted-foreground">

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
-import { CalendarPlus, Trash2, X } from "lucide-react";
+import { CalendarPlus, ChevronDown, ChevronUp, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, SectionCard } from "@/components/app-shell";
 import { RequireGezin } from "@/components/require-auth";
@@ -61,6 +61,7 @@ function AgendaPage() {
   const [icalUrl, setIcalUrl] = useState("");
   const [icalLabel, setIcalLabel] = useState("");
   const [koppelBezig, setKoppelBezig] = useState(false);
+  const [koppelenOpen, setKoppelenOpen] = useState(false);
 
   const laad = useCallback(() => {
     listAgenda()
@@ -211,7 +212,7 @@ function AgendaPage() {
         </div>
       )}
 
-      {items === null ? (
+      {items === null || externeResultaten === null ? (
         <SectionCard className="mb-3 text-center text-sm text-muted-foreground">Laden…</SectionCard>
       ) : aankomendDatums.length === 0 && verledenDatums.length === 0 ? (
         <SectionCard className="mb-3 text-center text-sm text-muted-foreground">
@@ -274,51 +275,71 @@ function AgendaPage() {
       )}
 
       <SectionCard>
-        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Externe agenda's koppelen
-        </h2>
-        {koppelingen.length > 0 && (
-          <ul className="mb-2 space-y-1">
-            {koppelingen.map((k) => (
-              <li key={k.id} className="flex items-center justify-between text-sm">
-                <span>{k.label || "Mijn agenda"}</span>
-                <button
-                  onClick={() => void ontkoppelen(k)}
-                  aria-label="Ontkoppelen"
-                  className="text-muted-foreground hover:text-destructive"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-        {externeResultaten
-          ?.filter((r) => r.fout)
-          .map((r) => (
-            <p key={r.gebruiker_id} className="mb-2 text-[11px] text-destructive">
-              {r.naam}: {r.fout}
+        <button
+          onClick={() => setKoppelenOpen((o) => !o)}
+          className="flex w-full items-center justify-between text-left"
+        >
+          <span className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Externe agenda's koppelen
+            {koppelingen.length > 0 && ` (${koppelingen.length})`}
+          </span>
+          {koppelenOpen ? (
+            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          )}
+        </button>
+        {koppelenOpen && (
+          <div className="mt-2">
+            {koppelingen.length > 0 && (
+              <ul className="mb-2 space-y-1">
+                {koppelingen.map((k) => (
+                  <li key={k.id} className="flex items-center justify-between text-sm">
+                    <span>{k.label || "Mijn agenda"}</span>
+                    <button
+                      onClick={() => void ontkoppelen(k)}
+                      aria-label="Ontkoppelen"
+                      className="text-muted-foreground hover:text-destructive"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {externeResultaten
+              ?.filter((r) => r.fout)
+              .map((r) => (
+                <p key={r.gebruiker_id} className="mb-2 text-[11px] text-destructive">
+                  {r.naam}: {r.fout}
+                </p>
+              ))}
+            <form onSubmit={(e) => void koppelen(e)} className="space-y-2">
+              <Input
+                value={icalUrl}
+                onChange={(e) => setIcalUrl(e.target.value)}
+                placeholder="Geheime iCal-URL (bv. van Google Calendar)"
+              />
+              <Input
+                value={icalLabel}
+                onChange={(e) => setIcalLabel(e.target.value)}
+                placeholder="Naam (optioneel, bv. 'Werk')"
+              />
+              <Button
+                type="submit"
+                variant="secondary"
+                disabled={koppelBezig || !icalUrl.trim()}
+                className="w-full"
+              >
+                {koppelBezig ? "Bezig…" : "Koppelen"}
+              </Button>
+            </form>
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              Te vinden in Google Calendar via Instellingen → jouw agenda → "Geheime adres in
+              iCal-formaat".
             </p>
-          ))}
-        <form onSubmit={(e) => void koppelen(e)} className="space-y-2">
-          <Input
-            value={icalUrl}
-            onChange={(e) => setIcalUrl(e.target.value)}
-            placeholder="Geheime iCal-URL (bv. van Google Calendar)"
-          />
-          <Input
-            value={icalLabel}
-            onChange={(e) => setIcalLabel(e.target.value)}
-            placeholder="Naam (optioneel, bv. 'Werk')"
-          />
-          <Button type="submit" disabled={koppelBezig || !icalUrl.trim()} className="w-full">
-            {koppelBezig ? "Bezig…" : "Koppelen"}
-          </Button>
-        </form>
-        <p className="mt-2 text-[11px] text-muted-foreground">
-          Te vinden in Google Calendar via Instellingen → jouw agenda → "Geheime adres in
-          iCal-formaat".
-        </p>
+          </div>
+        )}
       </SectionCard>
     </AppShell>
   );

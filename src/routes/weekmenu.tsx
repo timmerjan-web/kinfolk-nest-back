@@ -191,7 +191,7 @@ function WeekmenuPage() {
                   ) : (
                     <button
                       onClick={() => setBewerkDatum(datum)}
-                      className="flex items-center gap-1 text-sm text-muted-foreground"
+                      className="flex items-center gap-1 text-sm font-medium text-secondary"
                     >
                       <Plus className="h-3.5 w-3.5" /> Maaltijd toevoegen
                     </button>

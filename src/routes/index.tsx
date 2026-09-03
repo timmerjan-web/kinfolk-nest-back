@@ -146,28 +146,6 @@ function TodayPage() {
 
   return (
     <AppShell title="Vandaag" subtitle={profile?.naam ? `${groet}, ${profile.naam}` : groet}>
-      <FotoVanDeDag />
-
-      <SectionCard className="mb-3">
-        <div className="mb-1 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          <ChefHat className="h-4 w-4" /> Weekmenu
-        </div>
-        {weekmenuVandaag === undefined ? (
-          <p className="text-sm text-muted-foreground">Laden…</p>
-        ) : weekmenuVandaag ? (
-          <div>
-            <p className="text-sm">{weekmenuVandaag.titel}</p>
-            {weekmenuVandaag.kok && (
-              <p className="text-xs text-muted-foreground">{naamVoor(weekmenuVandaag.kok)} kookt</p>
-            )}
-          </div>
-        ) : (
-          <Link to="/weekmenu" className="text-sm text-muted-foreground underline">
-            Nog niets ingevuld voor vandaag
-          </Link>
-        )}
-      </SectionCard>
-
       <SectionCard className="mb-3">
         <div className="mb-1 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           <ListChecks className="h-4 w-4" /> Klusjes
@@ -193,15 +171,35 @@ function TodayPage() {
       </SectionCard>
 
       <SectionCard className="mb-3">
+        <div className="mb-1 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          <ChefHat className="h-4 w-4" /> Weekmenu
+        </div>
+        {weekmenuVandaag === undefined ? (
+          <p className="text-sm text-muted-foreground">Laden…</p>
+        ) : weekmenuVandaag ? (
+          <div>
+            <p className="text-sm">{weekmenuVandaag.titel}</p>
+            {weekmenuVandaag.kok && (
+              <p className="text-xs text-muted-foreground">{naamVoor(weekmenuVandaag.kok)} kookt</p>
+            )}
+          </div>
+        ) : (
+          <Link to="/weekmenu" className="text-sm text-secondary underline">
+            Nog niets ingevuld voor vandaag
+          </Link>
+        )}
+      </SectionCard>
+
+      <SectionCard className="mb-3">
         <div className="mb-1 flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             <CalendarClock className="h-4 w-4" /> Eerstkomende afspraken
           </div>
-          <Link to="/agenda" className="text-xs text-muted-foreground underline">
+          <Link to="/agenda" className="text-xs text-secondary underline">
             Bekijk agenda
           </Link>
         </div>
-        {afsprakenAankomend === null ? (
+        {afsprakenAankomend === null || externeResultaten === null ? (
           <p className="text-sm text-muted-foreground">Laden…</p>
         ) : eerstkomend.length === 0 ? (
           <p className="text-sm text-muted-foreground">Geen aankomende afspraken.</p>
@@ -226,7 +224,7 @@ function TodayPage() {
           <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             <Gift className="h-4 w-4" /> Verjaardagen
           </div>
-          <Link to="/verjaardagen" className="text-xs text-muted-foreground underline">
+          <Link to="/verjaardagen" className="text-xs text-secondary underline">
             Bekijk alles
           </Link>
         </div>
@@ -245,6 +243,8 @@ function TodayPage() {
           </ul>
         )}
       </SectionCard>
+
+      <FotoVanDeDag />
 
       <SectionCard className="mb-3">
         <div className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">

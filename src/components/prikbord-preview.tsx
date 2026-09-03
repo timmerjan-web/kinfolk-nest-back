@@ -19,7 +19,7 @@ export function PrikbordPreview() {
         <div className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Prikbord
         </div>
-        <Link to="/prikbord" className="text-xs text-muted-foreground underline">
+        <Link to="/prikbord" className="text-xs text-secondary underline">
           Bekijk alles
         </Link>
       </div>

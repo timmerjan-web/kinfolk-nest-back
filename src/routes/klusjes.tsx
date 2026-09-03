@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { Plus, Trash2, X } from "lucide-react";
+import { BookOpen, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, SectionCard } from "@/components/app-shell";
 import { RequireGezin } from "@/components/require-auth";
+import { Button } from "@/components/ui/button";
 import { KlusjeForm } from "@/components/klusje-form";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -138,11 +139,11 @@ function KlusjesPage() {
         </button>
       }
     >
-      <div className="mb-3 text-right">
-        <Link to="/klus-sjablonen" className="text-xs text-muted-foreground underline">
-          Klussencatalogus beheren
+      <Button asChild variant="outline" size="sm" className="mb-3 w-full">
+        <Link to="/klus-sjablonen">
+          <BookOpen className="h-4 w-4" /> Klussencatalogus beheren
         </Link>
-      </div>
+      </Button>
 
       {nieuwOpen && (
         <div className="mb-3">

@@ -149,10 +149,10 @@ export function FotoVanDeDag() {
             </p>
           )}
           <div className="mt-1 flex gap-3">
-            <button onClick={kiesFoto} className="text-xs text-muted-foreground underline">
+            <button onClick={kiesFoto} className="text-xs text-secondary underline">
               Vervang je foto
             </button>
-            <Link to="/fotos" className="text-xs text-muted-foreground underline">
+            <Link to="/fotos" className="text-xs text-secondary underline">
               Bekijk je foto's
             </Link>
           </div>
