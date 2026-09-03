@@ -336,6 +336,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           deadline: string | null
+          deadline_tijd: string | null
           gezin_id: string
           herhaling: string | null
           id: string
@@ -351,6 +352,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           deadline?: string | null
+          deadline_tijd?: string | null
           gezin_id: string
           herhaling?: string | null
           id?: string
@@ -366,6 +368,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           deadline?: string | null
+          deadline_tijd?: string | null
           gezin_id?: string
           herhaling?: string | null
           id?: string

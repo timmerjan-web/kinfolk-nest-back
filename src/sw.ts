@@ -94,8 +94,12 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(titel, {
       body: data.body ?? "",
-      icon: `${self.registration.scope}icon-192.png`,
-      badge: `${self.registration.scope}icon-192.png`,
+      // Android tekent alleen het alfakanaal van dit icoon (wit silhouet op
+      // transparante achtergrond) — het gewone, volledig gekleurde
+      // icon-192.png (het PWA-icoon) geeft daardoor een effen donker
+      // vierkant in plaats van een herkenbare vorm.
+      icon: `${self.registration.scope}notificatie-icoon.png`,
+      badge: `${self.registration.scope}notificatie-icoon.png`,
       data: { url: doelUrl },
     }),
   );

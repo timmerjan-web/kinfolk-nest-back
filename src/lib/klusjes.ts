@@ -9,6 +9,7 @@ export type Herhaling = "dagelijks" | "wekelijks" | "maandelijks";
 export type KlusjeInvoer = {
   titel: string;
   deadline: string | null;
+  deadline_tijd: string | null;
   toegewezen_aan: string | null;
   sjabloon_id: string | null;
   herhaling: Herhaling | null;
@@ -106,4 +107,10 @@ export function formatteerDeadline(datumString: string): string {
 const [jaar, maand, dag] = datumString.split("-").map(Number) as [number, number, number];
   const datum = new Date(jaar, maand - 1, dag);
   return datum.toLocaleDateString("nl-NL", { day: "numeric", month: "short" });
+}
+
+// Postgres geeft een time-kolom terug als "HH:MM:SS" — voor weergave
+// zijn de seconden niet relevant.
+export function formatteerTijd(tijdString: string): string {
+  return tijdString.slice(0, 5);
 }

@@ -34,6 +34,7 @@ export function KlusjeForm({
   const [sjabloonId, setSjabloonId] = useState("");
   const [titel, setTitel] = useState("");
   const [deadline, setDeadline] = useState("");
+  const [deadlineTijd, setDeadlineTijd] = useState("");
   const [herhaling, setHerhaling] = useState<Herhaling | "">("");
   const [toegewezenAan, setToegewezenAan] = useState("");
 
@@ -52,6 +53,7 @@ export function KlusjeForm({
     void onOpslaan({
       titel: finaleTitel,
       deadline: deadline || null,
+      deadline_tijd: deadline && deadlineTijd ? deadlineTijd : null,
       toegewezen_aan: toegewezenAan || null,
       sjabloon_id: bron === "catalogus" ? sjabloonId || null : null,
       herhaling: herhaling || null,
@@ -116,7 +118,7 @@ export function KlusjeForm({
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <div>
           <Label htmlFor="klusje-deadline">Datum</Label>
           <Input
@@ -124,6 +126,17 @@ export function KlusjeForm({
             type="date"
             value={deadline}
             onChange={(e) => setDeadline(e.target.value)}
+            className="mt-1"
+          />
+        </div>
+        <div>
+          <Label htmlFor="klusje-deadline-tijd">Tijd</Label>
+          <Input
+            id="klusje-deadline-tijd"
+            type="time"
+            value={deadlineTijd}
+            onChange={(e) => setDeadlineTijd(e.target.value)}
+            disabled={!deadline}
             className="mt-1"
           />
         </div>

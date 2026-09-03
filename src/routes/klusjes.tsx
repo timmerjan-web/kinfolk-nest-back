@@ -12,6 +12,7 @@ import {
   createKlusje,
   deleteKlusje,
   formatteerDeadline,
+  formatteerTijd,
   listKlusjes,
   toggleAfgerond,
   type Klusje,
@@ -249,6 +250,7 @@ function KlusjeRij({
         {(klusje.deadline ?? naam ?? herhalingLabel) && (
           <p className={`text-[11px] ${teLaat ? "text-destructive" : "text-muted-foreground"}`}>
             {klusje.deadline && formatteerDeadline(klusje.deadline)}
+            {klusje.deadline && klusje.deadline_tijd && ` om ${formatteerTijd(klusje.deadline_tijd)}`}
             {klusje.deadline && naam && " · "}
             {naam}
             {(klusje.deadline ?? naam) && herhalingLabel && " · "}
