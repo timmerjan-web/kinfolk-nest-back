@@ -1,9 +1,12 @@
 import { useState, type FormEvent } from "react";
+import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import type { ReceptInvoer } from "@/lib/recepten";
+import type { Ingredient, ReceptInvoer } from "@/lib/recepten";
+
+const LEEG_INGREDIENT: Ingredient = { naam: "", hoeveelheid: null, eenheid: null };
 
 export function ReceptForm({
   initieel,
@@ -22,8 +25,27 @@ export function ReceptForm({
     initieel?.bereidingstijd_minuten != null ? String(initieel.bereidingstijd_minuten) : "",
   );
   const [porties, setPorties] = useState(initieel?.porties != null ? String(initieel.porties) : "");
-  const [ingredienten, setIngredienten] = useState((initieel?.ingredienten ?? []).join("\n"));
+  const [ingredienten, setIngredienten] = useState<Ingredient[]>(
+    initieel?.ingredienten && initieel.ingredienten.length > 0
+      ? initieel.ingredienten
+      : [{ ...LEEG_INGREDIENT }],
+  );
   const [instructies, setInstructies] = useState(initieel?.instructies ?? "");
+
+  const wijzigIngredient = (i: number, veld: keyof Ingredient, waarde: string) => {
+    setIngredienten((huidig) =>
+      huidig.map((ing, idx) => {
+        if (idx !== i) return ing;
+        if (veld === "hoeveelheid") return { ...ing, hoeveelheid: waarde.trim() ? Number(waarde) : null };
+        if (veld === "eenheid") return { ...ing, eenheid: waarde.trim() || null };
+        return { ...ing, naam: waarde };
+      }),
+    );
+  };
+
+  const verwijderIngredient = (i: number) => {
+    setIngredienten((huidig) => huidig.filter((_, idx) => idx !== i));
+  };
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -33,9 +55,8 @@ export function ReceptForm({
       bereidingstijd_minuten: bereidingstijd.trim() ? Number(bereidingstijd) : null,
       porties: porties.trim() ? Number(porties) : null,
       ingredienten: ingredienten
-        .split("\n")
-        .map((r) => r.trim())
-        .filter(Boolean),
+        .map((ing) => ({ ...ing, naam: ing.naam.trim() }))
+        .filter((ing) => ing.naam !== ""),
       instructies: instructies.trim() || null,
     });
   };
@@ -94,16 +115,54 @@ export function ReceptForm({
       </div>
 
       <div>
-        <Label htmlFor="ingredienten">Ingrediënten</Label>
-        <Textarea
-          id="ingredienten"
-          value={ingredienten}
-          onChange={(e) => setIngredienten(e.target.value)}
-          placeholder={"Eén per regel, bv.\n500g gehakt\n1 ui\n2 tenen knoflook"}
-          rows={5}
-          className="mt-1 font-mono text-sm"
-        />
-        <p className="mt-1 text-xs text-muted-foreground">Eén ingrediënt per regel.</p>
+        <Label>Ingrediënten</Label>
+        <div className="mt-1 space-y-2">
+          {ingredienten.map((ing, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <Input
+                type="number"
+                min={0}
+                step="any"
+                value={ing.hoeveelheid ?? ""}
+                onChange={(e) => wijzigIngredient(i, "hoeveelheid", e.target.value)}
+                placeholder="500"
+                aria-label="Hoeveelheid"
+                className="w-16 shrink-0"
+              />
+              <Input
+                value={ing.eenheid ?? ""}
+                onChange={(e) => wijzigIngredient(i, "eenheid", e.target.value)}
+                placeholder="g"
+                aria-label="Eenheid"
+                className="w-16 shrink-0"
+              />
+              <Input
+                value={ing.naam}
+                onChange={(e) => wijzigIngredient(i, "naam", e.target.value)}
+                placeholder="Gehakt"
+                aria-label="Ingrediënt"
+                className="min-w-0 flex-1"
+              />
+              <button
+                type="button"
+                onClick={() => verwijderIngredient(i)}
+                aria-label="Ingrediënt verwijderen"
+                className="flex h-9 w-9 shrink-0 items-center justify-center text-muted-foreground hover:text-destructive"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => setIngredienten((huidig) => [...huidig, { ...LEEG_INGREDIENT }])}
+          className="mt-2"
+        >
+          <Plus className="h-4 w-4" /> Ingrediënt toevoegen
+        </Button>
       </div>
 
       <div>

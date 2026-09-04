@@ -1,6 +1,7 @@
 // Boodschappen-CRUD — RLS scoopt op gezin_id = current_gezin_id().
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { formatteerIngredient, naarIngredienten } from "@/lib/recepten";
 
 export type BoodschappenItem = Tables<"boodschappen_items">;
 
@@ -72,11 +73,12 @@ export async function genereerVanWeekmenu(
   const bestaandeSet = new Set((bestaande ?? []).map((b) => `${b.bron_recept_id}::${b.naam}`));
 
   const nieuweItems = (recepten ?? []).flatMap((r) =>
-    r.ingredienten
-      .filter((ingredient) => !bestaandeSet.has(`${r.id}::${ingredient}`))
-      .map((ingredient) => ({
+    naarIngredienten(r.ingredienten)
+      .map(formatteerIngredient)
+      .filter((naam) => naam !== "" && !bestaandeSet.has(`${r.id}::${naam}`))
+      .map((naam) => ({
         gezin_id: gezinId,
-        naam: ingredient,
+        naam,
         bron_recept_id: r.id,
         created_by: userId,
       })),

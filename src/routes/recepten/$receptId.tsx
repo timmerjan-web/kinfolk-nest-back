@@ -1,12 +1,20 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Clock, Pencil, Trash2, Users as UsersIcon } from "lucide-react";
+import { Clock, Minus, Pencil, Plus, Trash2, Users as UsersIcon } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, SectionCard } from "@/components/app-shell";
 import { RequireGezin } from "@/components/require-auth";
 import { ReceptForm } from "@/components/recept-form";
 import { Button } from "@/components/ui/button";
-import { deleteRecept, getRecept, updateRecept, type Recept, type ReceptInvoer } from "@/lib/recepten";
+import {
+  deleteRecept,
+  formatteerIngredient,
+  getRecept,
+  schaalHoeveelheid,
+  updateRecept,
+  type Recept,
+  type ReceptInvoer,
+} from "@/lib/recepten";
 import { foutTekst } from "@/lib/errors";
 
 export const Route = createFileRoute("/recepten/$receptId")({
@@ -24,10 +32,14 @@ function ReceptDetailPage() {
   const [recept, setRecept] = useState<Recept | null | undefined>(undefined);
   const [bewerken, setBewerken] = useState(false);
   const [bezig, setBezig] = useState(false);
+  const [weergavePorties, setWeergavePorties] = useState<number | null>(null);
 
   useEffect(() => {
     getRecept(receptId)
-      .then(setRecept)
+      .then((data) => {
+        setRecept(data);
+        setWeergavePorties(data?.porties ?? null);
+      })
       .catch((err) => toast.error(foutTekst(err, "Recept laden mislukt.")));
   }, [receptId]);
 
@@ -61,7 +73,7 @@ function ReceptDetailPage() {
 
   if (recept === undefined) {
     return (
-      <AppShell title="Recept">
+      <AppShell title="Recept" terug="/recepten">
         <SectionCard className="text-center text-sm text-muted-foreground">Laden…</SectionCard>
       </AppShell>
     );
@@ -69,7 +81,7 @@ function ReceptDetailPage() {
 
   if (recept === null) {
     return (
-      <AppShell title="Recept">
+      <AppShell title="Recept" terug="/recepten">
         <SectionCard className="text-center text-sm text-muted-foreground">
           Dit recept bestaat niet (meer).
         </SectionCard>
@@ -79,7 +91,7 @@ function ReceptDetailPage() {
 
   if (bewerken) {
     return (
-      <AppShell title="Recept bewerken">
+      <AppShell title="Recept bewerken" terug="/recepten">
         <ReceptForm
           initieel={recept}
           bezig={bezig}
@@ -93,6 +105,7 @@ function ReceptDetailPage() {
   return (
     <AppShell
       title={recept.titel}
+      terug="/recepten"
       action={
         <div className="flex items-center gap-1">
           <button
@@ -113,15 +126,36 @@ function ReceptDetailPage() {
         </div>
       }
     >
-      <div className="mb-3 flex gap-3 text-xs text-muted-foreground">
+      <div className="mb-3 flex items-center gap-3 text-xs text-muted-foreground">
         {recept.bereidingstijd_minuten != null && (
           <span className="flex items-center gap-1">
             <Clock className="h-3.5 w-3.5" /> {recept.bereidingstijd_minuten} min
           </span>
         )}
-        {recept.porties != null && (
-          <span className="flex items-center gap-1">
-            <UsersIcon className="h-3.5 w-3.5" /> {recept.porties} porties
+        {recept.porties != null && weergavePorties != null && (
+          <span className="flex items-center gap-1.5">
+            <UsersIcon className="h-3.5 w-3.5" />
+            <button
+              type="button"
+              onClick={() => setWeergavePorties((p) => Math.max(1, (p ?? 1) - 1))}
+              disabled={weergavePorties <= 1}
+              aria-label="Minder porties"
+              className="flex h-6 w-6 items-center justify-center rounded-full border border-border disabled:opacity-40"
+            >
+              <Minus className="h-3 w-3" />
+            </button>
+            <span className="min-w-[3ch] text-center font-medium text-foreground">
+              {weergavePorties}
+            </span>
+            <button
+              type="button"
+              onClick={() => setWeergavePorties((p) => (p ?? 1) + 1)}
+              aria-label="Meer porties"
+              className="flex h-6 w-6 items-center justify-center rounded-full border border-border"
+            >
+              <Plus className="h-3 w-3" />
+            </button>
+            porties
           </span>
         )}
       </div>
@@ -138,12 +172,20 @@ function ReceptDetailPage() {
             Ingrediënten
           </h2>
           <ul className="space-y-1 text-sm">
-            {recept.ingredienten.map((ingredient, i) => (
-              <li key={i} className="flex items-start gap-2">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                {ingredient}
-              </li>
-            ))}
+            {recept.ingredienten.map((ingredient, i) => {
+              const ratio =
+                recept.porties && weergavePorties ? weergavePorties / recept.porties : 1;
+              const weergave =
+                ingredient.hoeveelheid != null && ratio !== 1
+                  ? { ...ingredient, hoeveelheid: schaalHoeveelheid(ingredient.hoeveelheid, ratio) }
+                  : ingredient;
+              return (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                  {formatteerIngredient(weergave)}
+                </li>
+              );
+            })}
           </ul>
         </SectionCard>
       )}

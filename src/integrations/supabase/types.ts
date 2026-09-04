@@ -560,7 +560,7 @@ export type Database = {
           created_by: string | null
           gezin_id: string
           id: string
-          ingredienten: string[]
+          ingredienten: Json
           instructies: string | null
           porties: number | null
           titel: string
@@ -573,7 +573,7 @@ export type Database = {
           created_by?: string | null
           gezin_id: string
           id?: string
-          ingredienten?: string[]
+          ingredienten?: Json
           instructies?: string | null
           porties?: number | null
           titel: string
@@ -586,7 +586,7 @@ export type Database = {
           created_by?: string | null
           gezin_id?: string
           id?: string
-          ingredienten?: string[]
+          ingredienten?: Json
           instructies?: string | null
           porties?: number | null
           titel?: string

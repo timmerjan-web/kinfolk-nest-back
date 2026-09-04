@@ -8,6 +8,7 @@ import {
   CalendarClock,
   Users,
   LogOut,
+  ChevronLeft,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { GezinsappLogo } from "./logo";
@@ -29,11 +30,16 @@ export function AppShell({
   subtitle,
   children,
   action,
+  terug,
 }: {
   title: string;
   subtitle?: string | undefined;
   children: ReactNode;
   action?: ReactNode;
+  // Route om naartoe te gaan met een terugpijl i.p.v. het logo — voor
+  // detailschermen die vanuit een lijst geopend worden. Zonder browserbalk
+  // (geïnstalleerde PWA) is dit de enige weg terug.
+  terug?: string;
 }) {
   const { pathname } = useLocation();
   const { user, profile, signOut } = useAuth();
@@ -49,8 +55,12 @@ export function AppShell({
       <header className="safe-top surface-dark">
         <div className="mx-auto max-w-2xl px-5 py-5">
           <div className="flex items-start justify-between gap-3">
-            <Link to="/" className="flex items-center gap-3 text-white">
-              <GezinsappLogo className="h-10 w-10 shrink-0 text-white" />
+            <Link to={terug ?? "/"} className="flex items-center gap-3 text-white">
+              {terug ? (
+                <ChevronLeft className="h-8 w-8 shrink-0" aria-label="Terug" />
+              ) : (
+                <GezinsappLogo className="h-10 w-10 shrink-0 text-white" />
+              )}
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.25em] opacity-80">
                   Gezinsapp
