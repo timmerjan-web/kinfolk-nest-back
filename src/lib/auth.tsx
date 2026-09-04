@@ -60,8 +60,16 @@ function applySession(session: Session | null) {
   const userId = user?.id ?? null;
 
   if (userId === currentUserId) {
-    // Alleen tokenvernieuwing: profiel niet opnieuw laden, geen laadscherm.
-    setState({ session, user, loading: false });
+    // Tokenvernieuwing — of Supabase's eigen dubbele initialisatie:
+    // onAuthStateChange en getSession() vuren allebei voor dezelfde
+    // sessie. loading hier NIET aanraken: als er nog een profielfetch
+    // bezig is voor deze gebruiker (de eerste call zette loading=true),
+    // moet die gewoon zelf klaar zijn voordat loading weer false wordt.
+    // Anders ziet RequireGezin loading=false met profile nog steeds
+    // null, en stuurt het voortijdig naar onboarding — race condition
+    // die op een koude start (geïnstalleerde PWA, gedeelde link) een
+    // bestaand gezinslid ten onrechte een "gezin aanmaken"-scherm toont.
+    setState({ session, user });
     return;
   }
 

@@ -69,7 +69,7 @@ export function KlusjeForm({
         <div className="flex gap-2">
           <Button
             type="button"
-            variant={bron === "catalogus" ? "default" : "secondary"}
+            variant={bron === "catalogus" ? "secondary" : "outline"}
             onClick={() => setBron("catalogus")}
             className="flex-1"
           >
@@ -77,7 +77,7 @@ export function KlusjeForm({
           </Button>
           <Button
             type="button"
-            variant={bron === "adhoc" ? "default" : "secondary"}
+            variant={bron === "adhoc" ? "secondary" : "outline"}
             onClick={() => setBron("adhoc")}
             className="flex-1"
           >
@@ -177,12 +177,13 @@ export function KlusjeForm({
       <div className="flex gap-2">
         <Button
           type="submit"
+          variant="secondary"
           disabled={bezig || (bron === "catalogus" ? !sjabloonId : !titel.trim())}
           className="flex-1"
         >
           {bezig ? "Bezig…" : "Opslaan"}
         </Button>
-        <Button type="button" variant="secondary" onClick={onAnnuleren} disabled={bezig}>
+        <Button type="button" variant="ghost" onClick={onAnnuleren} disabled={bezig}>
           Annuleren
         </Button>
       </div>

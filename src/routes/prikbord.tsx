@@ -243,10 +243,11 @@ function PrikbordPage() {
                     </label>
                   )}
                   <div className="flex gap-2">
-                    <Button variant="secondary" onClick={annulerenBewerken} className="flex-1">
+                    <Button variant="ghost" onClick={annulerenBewerken} className="flex-1">
                       Annuleren
                     </Button>
                     <Button
+                      variant="secondary"
                       onClick={() => void opslaanBewerking(item)}
                       disabled={bewerkBezig || !bewerkTekst.trim()}
                       className="flex-1"

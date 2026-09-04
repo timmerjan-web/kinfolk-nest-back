@@ -117,11 +117,11 @@ export function VerjaardagForm({
         />
       </div>
       <div className="flex gap-2">
-        <Button type="submit" disabled={bezig || !naam.trim()} className="flex-1">
+        <Button type="submit" variant="secondary" disabled={bezig || !naam.trim()} className="flex-1">
           {bezig ? "Bezig…" : "Opslaan"}
         </Button>
         {onAnnuleren && (
-          <Button type="button" variant="secondary" onClick={onAnnuleren} disabled={bezig}>
+          <Button type="button" variant="ghost" onClick={onAnnuleren} disabled={bezig}>
             Annuleren
           </Button>
         )}
