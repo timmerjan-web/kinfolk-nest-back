@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ChefHat, Clock, Plus, Search, Star, Users as UsersIcon } from "lucide-react";
+import { ChefHat, Clock, Plus, Search, Star, Upload, Users as UsersIcon } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, SectionCard } from "@/components/app-shell";
 import { RequireGezin } from "@/components/require-auth";
 import { PlanReceptButton } from "@/components/plan-recept-button";
+import { useAuth } from "@/lib/auth";
 import { foutTekst } from "@/lib/errors";
 import { categorieLabel, listRecepten, RECEPT_CATEGORIEEN, type Recept } from "@/lib/recepten";
 import { useReceptFavorieten } from "@/lib/receptFavorieten";
@@ -19,6 +20,7 @@ export const Route = createFileRoute("/recepten/")({
 });
 
 function ReceptenPage() {
+  const { profile } = useAuth();
   const [recepten, setRecepten] = useState<Recept[] | null>(null);
   const [tab, setTab] = useState<string>(RECEPT_CATEGORIEEN[1]);
   const [zoek, setZoek] = useState("");
@@ -79,13 +81,24 @@ function ReceptenPage() {
       title="Recepten"
       subtitle="Het gezinskookboek"
       action={
-        <Link
-          to="/recepten/nieuw"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur"
-          aria-label="Nieuw recept"
-        >
-          <Plus className="h-4 w-4" />
-        </Link>
+        <div className="flex items-center gap-1">
+          {profile?.rol === "ouder" && (
+            <Link
+              to="/recepten/import"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur"
+              aria-label="Recepten importeren"
+            >
+              <Upload className="h-4 w-4" />
+            </Link>
+          )}
+          <Link
+            to="/recepten/nieuw"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur"
+            aria-label="Nieuw recept"
+          >
+            <Plus className="h-4 w-4" />
+          </Link>
+        </div>
       }
     >
       <div

@@ -48,6 +48,18 @@ export async function createRecept(gezinId: string, userId: string, invoer: Rece
   return data;
 }
 
+// Bulk-insert voor de Excel-import — één round-trip voor alle rijen i.p.v.
+// createRecept in een lus.
+export async function createRecepten(gezinId: string, userId: string, invoerLijst: ReceptInvoer[]) {
+  if (invoerLijst.length === 0) return [];
+  const { data, error } = await supabase
+    .from("recepten")
+    .insert(invoerLijst.map((invoer) => ({ ...invoer, gezin_id: gezinId, created_by: userId })))
+    .select();
+  if (error) throw error;
+  return data;
+}
+
 export async function updateRecept(id: string, invoer: ReceptInvoer) {
   const { data, error } = await supabase
     .from("recepten")
