@@ -28,9 +28,15 @@ export async function markeerAllesGelezen(ids: string[]) {
 }
 
 export function meldingTekst(melding: Melding): string {
-  const payload = melding.payload as { titel?: string } | null;
+  const payload = melding.payload as { titel?: string; door?: string } | null;
   if (melding.type === "klusje_toegewezen") {
     return `Je bent ingedeeld voor "${payload?.titel ?? "een klusje"}"`;
+  }
+  if (melding.type === "klusje_voltooid") {
+    const titel = payload?.titel ?? "een klusje";
+    return payload?.door
+      ? `${payload.door} heeft "${titel}" afgerond`
+      : `"${titel}" is afgerond`;
   }
   return "Nieuwe melding";
 }
