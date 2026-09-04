@@ -556,39 +556,48 @@ export type Database = {
         Row: {
           bereidingstijd_minuten: number | null
           beschrijving: string | null
+          categorie: string
           created_at: string
           created_by: string | null
           gezin_id: string
           id: string
-          ingredienten: Json
-          instructies: string | null
+          ingredienten: string[]
           porties: number | null
+          recept_url: string | null
+          stappen: string[]
+          tags: string[]
           titel: string
           updated_at: string
         }
         Insert: {
           bereidingstijd_minuten?: number | null
           beschrijving?: string | null
+          categorie?: string
           created_at?: string
           created_by?: string | null
           gezin_id: string
           id?: string
-          ingredienten?: Json
-          instructies?: string | null
+          ingredienten?: string[]
           porties?: number | null
+          recept_url?: string | null
+          stappen?: string[]
+          tags?: string[]
           titel: string
           updated_at?: string
         }
         Update: {
           bereidingstijd_minuten?: number | null
           beschrijving?: string | null
+          categorie?: string
           created_at?: string
           created_by?: string | null
           gezin_id?: string
           id?: string
-          ingredienten?: Json
-          instructies?: string | null
+          ingredienten?: string[]
           porties?: number | null
+          recept_url?: string | null
+          stappen?: string[]
+          tags?: string[]
           titel?: string
           updated_at?: string
         }
@@ -598,6 +607,45 @@ export type Database = {
             columns: ["gezin_id"]
             isOneToOne: false
             referencedRelation: "gezinnen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recept_favorieten: {
+        Row: {
+          created_at: string
+          gebruiker_id: string
+          gezin_id: string
+          id: string
+          recept_id: string
+        }
+        Insert: {
+          created_at?: string
+          gebruiker_id: string
+          gezin_id: string
+          id?: string
+          recept_id: string
+        }
+        Update: {
+          created_at?: string
+          gebruiker_id?: string
+          gezin_id?: string
+          id?: string
+          recept_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recept_favorieten_gezin_id_fkey"
+            columns: ["gezin_id"]
+            isOneToOne: false
+            referencedRelation: "gezinnen"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recept_favorieten_recept_id_fkey"
+            columns: ["recept_id"]
+            isOneToOne: false
+            referencedRelation: "recepten"
             referencedColumns: ["id"]
           },
         ]

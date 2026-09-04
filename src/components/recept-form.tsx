@@ -1,13 +1,10 @@
 import { useState, type FormEvent } from "react";
-import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import type { Ingredient, ReceptInvoer } from "@/lib/recepten";
-import { kapitaliseer } from "@/lib/tekst";
-
-const LEEG_INGREDIENT: Ingredient = { naam: "", hoeveelheid: null, eenheid: null };
+import { RECEPT_CATEGORIEEN, categorieLabel, type ReceptInvoer } from "@/lib/recepten";
+import { kapitaliseer, naarRegels, naarTags } from "@/lib/tekst";
 
 export function ReceptForm({
   initieel,
@@ -21,44 +18,44 @@ export function ReceptForm({
   onIndienen: (invoer: ReceptInvoer) => void | Promise<void>;
 }) {
   const [titel, setTitel] = useState(initieel?.titel ?? "");
+  const [categorie, setCategorie] = useState(initieel?.categorie ?? RECEPT_CATEGORIEEN[1]);
   const [beschrijving, setBeschrijving] = useState(initieel?.beschrijving ?? "");
   const [bereidingstijd, setBereidingstijd] = useState(
     initieel?.bereidingstijd_minuten != null ? String(initieel.bereidingstijd_minuten) : "",
   );
   const [porties, setPorties] = useState(initieel?.porties != null ? String(initieel.porties) : "");
-  const [ingredienten, setIngredienten] = useState<Ingredient[]>(
+  const [ingredienten, setIngredienten] = useState(
     initieel?.ingredienten && initieel.ingredienten.length > 0
-      ? initieel.ingredienten
-      : [{ ...LEEG_INGREDIENT }],
+      ? initieel.ingredienten.join("\n")
+      : "",
   );
-  const [instructies, setInstructies] = useState(initieel?.instructies ?? "");
-
-  const wijzigIngredient = (i: number, veld: keyof Ingredient, waarde: string) => {
-    setIngredienten((huidig) =>
-      huidig.map((ing, idx) => {
-        if (idx !== i) return ing;
-        if (veld === "hoeveelheid") return { ...ing, hoeveelheid: waarde.trim() ? Number(waarde) : null };
-        if (veld === "eenheid") return { ...ing, eenheid: waarde.trim() || null };
-        return { ...ing, naam: waarde };
-      }),
-    );
-  };
-
-  const verwijderIngredient = (i: number) => {
-    setIngredienten((huidig) => huidig.filter((_, idx) => idx !== i));
-  };
+  const [stappen, setStappen] = useState(
+    initieel?.stappen && initieel.stappen.length > 0 ? initieel.stappen.join("\n") : "",
+  );
+  const [tags, setTags] = useState(
+    initieel?.tags && initieel.tags.length > 0 ? initieel.tags.join(", ") : "",
+  );
+  const [receptUrl, setReceptUrl] = useState(initieel?.recept_url ?? "");
+  const [fout, setFout] = useState<string | null>(null);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
+    const ing = naarRegels(ingredienten);
+    if (ing.length === 0) {
+      setFout("Voeg minstens één ingrediënt toe (per regel).");
+      return;
+    }
+    setFout(null);
     void onIndienen({
       titel: kapitaliseer(titel.trim()),
+      categorie,
       beschrijving: beschrijving.trim() || null,
       bereidingstijd_minuten: bereidingstijd.trim() ? Number(bereidingstijd) : null,
       porties: porties.trim() ? Number(porties) : null,
-      ingredienten: ingredienten
-        .map((ing) => ({ ...ing, naam: ing.naam.trim() }))
-        .filter((ing) => ing.naam !== ""),
-      instructies: instructies.trim() || null,
+      ingredienten: ing,
+      stappen: naarRegels(stappen),
+      tags: naarTags(tags),
+      recept_url: receptUrl.trim() || null,
     });
   };
 
@@ -77,15 +74,23 @@ export function ReceptForm({
       </div>
 
       <div>
-        <Label htmlFor="beschrijving">Korte beschrijving</Label>
-        <Textarea
-          id="beschrijving"
-          value={beschrijving}
-          onChange={(e) => setBeschrijving(e.target.value)}
-          placeholder="Optioneel"
-          rows={2}
-          className="mt-1"
-        />
+        <Label>Categorie</Label>
+        <div className="mt-1 flex gap-2">
+          {RECEPT_CATEGORIEEN.map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => setCategorie(c)}
+              className={`flex-1 rounded-xl px-3 py-2 text-sm font-medium capitalize ${
+                categorie === c
+                  ? "bg-primary text-primary-foreground"
+                  : "border border-input text-muted-foreground"
+              }`}
+            >
+              {categorieLabel(c)}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -116,64 +121,62 @@ export function ReceptForm({
       </div>
 
       <div>
-        <Label>Ingrediënten</Label>
-        <div className="mt-1 space-y-2">
-          {ingredienten.map((ing, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <Input
-                type="number"
-                min={0}
-                step="any"
-                value={ing.hoeveelheid ?? ""}
-                onChange={(e) => wijzigIngredient(i, "hoeveelheid", e.target.value)}
-                placeholder="500"
-                aria-label="Hoeveelheid"
-                className="w-16 shrink-0"
-              />
-              <Input
-                value={ing.eenheid ?? ""}
-                onChange={(e) => wijzigIngredient(i, "eenheid", e.target.value)}
-                placeholder="g"
-                aria-label="Eenheid"
-                className="w-16 shrink-0"
-              />
-              <Input
-                value={ing.naam}
-                onChange={(e) => wijzigIngredient(i, "naam", e.target.value)}
-                placeholder="Gehakt"
-                aria-label="Ingrediënt"
-                className="min-w-0 flex-1"
-              />
-              <button
-                type="button"
-                onClick={() => verwijderIngredient(i)}
-                aria-label="Ingrediënt verwijderen"
-                className="flex h-9 w-9 shrink-0 items-center justify-center text-muted-foreground hover:text-destructive"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          ))}
-        </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => setIngredienten((huidig) => [...huidig, { ...LEEG_INGREDIENT }])}
-          className="mt-2"
-        >
-          <Plus className="h-4 w-4" /> Ingrediënt toevoegen
-        </Button>
+        <Label htmlFor="ingredienten">Ingrediënten (één per regel)</Label>
+        <Textarea
+          id="ingredienten"
+          required
+          value={ingredienten}
+          onChange={(e) => setIngredienten(e.target.value)}
+          placeholder={"500 g gehakt\n1 ui\nSnuf zout"}
+          rows={5}
+          className="mt-1 font-mono text-sm"
+        />
+        {fout && <p className="mt-1 text-xs text-destructive">{fout}</p>}
       </div>
 
       <div>
-        <Label htmlFor="instructies">Bereidingswijze</Label>
+        <Label htmlFor="stappen">Bereiding (één stap per regel)</Label>
         <Textarea
-          id="instructies"
-          value={instructies}
-          onChange={(e) => setInstructies(e.target.value)}
-          placeholder="Stappen, optioneel genummerd"
-          rows={6}
+          id="stappen"
+          value={stappen}
+          onChange={(e) => setStappen(e.target.value)}
+          placeholder={"Snijd de ui\nBak het gehakt\n…"}
+          rows={5}
+          className="mt-1 font-mono text-sm"
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="tags">Tags (komma-gescheiden)</Label>
+        <Input
+          id="tags"
+          value={tags}
+          onChange={(e) => setTags(e.target.value)}
+          placeholder="vegetarisch, snel, kindvriendelijk"
+          className="mt-1"
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="recept-url">Link naar origineel recept</Label>
+        <Input
+          id="recept-url"
+          type="url"
+          value={receptUrl}
+          onChange={(e) => setReceptUrl(e.target.value)}
+          placeholder="https://…"
+          className="mt-1"
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="beschrijving">Korte beschrijving</Label>
+        <Textarea
+          id="beschrijving"
+          value={beschrijving}
+          onChange={(e) => setBeschrijving(e.target.value)}
+          placeholder="Optioneel"
+          rows={2}
           className="mt-1"
         />
       </div>

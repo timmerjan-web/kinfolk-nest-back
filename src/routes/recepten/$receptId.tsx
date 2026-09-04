@@ -1,21 +1,30 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Clock, Minus, MoreVertical, Pencil, Plus, Trash2, Users as UsersIcon } from "lucide-react";
+import {
+  Clock,
+  ExternalLink,
+  MoreVertical,
+  Pencil,
+  ShoppingBasket,
+  Trash2,
+  Users as UsersIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, SectionCard } from "@/components/app-shell";
 import { RequireGezin } from "@/components/require-auth";
 import { ReceptForm } from "@/components/recept-form";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/lib/auth";
+import { addItems } from "@/lib/boodschappen";
+import { foutTekst } from "@/lib/errors";
 import {
+  categorieLabel,
   deleteRecept,
-  formatteerIngredient,
   getRecept,
-  schaalHoeveelheid,
   updateRecept,
   type Recept,
   type ReceptInvoer,
 } from "@/lib/recepten";
-import { foutTekst } from "@/lib/errors";
 
 export const Route = createFileRoute("/recepten/$receptId")({
   head: () => ({ meta: [{ title: "Recept — Gezinsapp" }] }),
@@ -29,17 +38,19 @@ export const Route = createFileRoute("/recepten/$receptId")({
 function ReceptDetailPage() {
   const { receptId } = Route.useParams();
   const navigate = useNavigate();
+  const { profile, user } = useAuth();
   const [recept, setRecept] = useState<Recept | null | undefined>(undefined);
   const [bewerken, setBewerken] = useState(false);
   const [bezig, setBezig] = useState(false);
-  const [weergavePorties, setWeergavePorties] = useState<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [aangevinkt, setAangevinkt] = useState<Set<number>>(new Set());
+  const [toevoegenBezig, setToevoegenBezig] = useState(false);
 
   useEffect(() => {
     getRecept(receptId)
       .then((data) => {
         setRecept(data);
-        setWeergavePorties(data?.porties ?? null);
+        setAangevinkt(new Set(data ? data.ingredienten.map((_, i) => i) : []));
       })
       .catch((err) => toast.error(foutTekst(err, "Recept laden mislukt.")));
   }, [receptId]);
@@ -49,6 +60,7 @@ function ReceptDetailPage() {
     try {
       const bijgewerkt = await updateRecept(receptId, invoer);
       setRecept(bijgewerkt);
+      setAangevinkt(new Set(bijgewerkt.ingredienten.map((_, i) => i)));
       setBewerken(false);
       toast.success("Recept bijgewerkt.");
     } catch (err) {
@@ -69,6 +81,26 @@ function ReceptDetailPage() {
     } catch (err) {
       toast.error(foutTekst(err, "Recept verwijderen mislukt."));
       setBezig(false);
+    }
+  };
+
+  const toevoegenAanBoodschappen = async () => {
+    if (!recept || !profile?.gezin_id || !user) return;
+    const namen = recept.ingredienten.filter((_, i) => aangevinkt.has(i));
+    if (namen.length === 0) {
+      toast.info("Selecteer minstens één ingrediënt.");
+      return;
+    }
+    setToevoegenBezig(true);
+    try {
+      await addItems(profile.gezin_id, user.id, namen);
+      toast.success(
+        `${namen.length} ${namen.length === 1 ? "item" : "items"} toegevoegd aan boodschappenlijst.`,
+      );
+    } catch (err) {
+      toast.error(foutTekst(err, "Toevoegen mislukt."));
+    } finally {
+      setToevoegenBezig(false);
     }
   };
 
@@ -145,39 +177,45 @@ function ReceptDetailPage() {
         </div>
       }
     >
-      <div className="mb-3 flex items-center gap-3 text-xs text-muted-foreground">
+      <div className="mb-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+        <span className="rounded-full bg-muted px-2 py-0.5 font-semibold capitalize text-foreground/80">
+          {categorieLabel(recept.categorie)}
+        </span>
         {recept.bereidingstijd_minuten != null && (
           <span className="flex items-center gap-1">
             <Clock className="h-3.5 w-3.5" /> {recept.bereidingstijd_minuten} min
           </span>
         )}
-        {recept.porties != null && weergavePorties != null && (
-          <span className="flex items-center gap-1.5">
-            <UsersIcon className="h-3.5 w-3.5" />
-            <button
-              type="button"
-              onClick={() => setWeergavePorties((p) => Math.max(1, (p ?? 1) - 1))}
-              disabled={weergavePorties <= 1}
-              aria-label="Minder porties"
-              className="flex h-6 w-6 items-center justify-center rounded-full border border-border disabled:opacity-40"
-            >
-              <Minus className="h-3 w-3" />
-            </button>
-            <span className="min-w-[3ch] text-center font-medium text-foreground">
-              {weergavePorties}
-            </span>
-            <button
-              type="button"
-              onClick={() => setWeergavePorties((p) => (p ?? 1) + 1)}
-              aria-label="Meer porties"
-              className="flex h-6 w-6 items-center justify-center rounded-full border border-border"
-            >
-              <Plus className="h-3 w-3" />
-            </button>
-            porties
+        {recept.porties != null && (
+          <span className="flex items-center gap-1">
+            <UsersIcon className="h-3.5 w-3.5" /> {recept.porties} porties
           </span>
         )}
       </div>
+
+      {recept.tags.length > 0 && (
+        <div className="mb-3 flex flex-wrap gap-1.5">
+          {recept.tags.map((t) => (
+            <span
+              key={t}
+              className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground"
+            >
+              #{t}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {recept.recept_url && (
+        <a
+          href={recept.recept_url}
+          target="_blank"
+          rel="noreferrer"
+          className="mb-3 inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium hover:bg-muted"
+        >
+          <ExternalLink className="h-4 w-4" /> Bekijk origineel recept
+        </a>
+      )}
 
       {recept.beschrijving && (
         <SectionCard className="mb-3">
@@ -190,38 +228,71 @@ function ReceptDetailPage() {
 
       {recept.ingredienten.length > 0 && (
         <SectionCard className="mb-3">
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Ingrediënten
-          </h2>
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Ingrediënten
+            </h2>
+            <div className="flex gap-2 text-[11px] text-muted-foreground">
+              <button
+                type="button"
+                onClick={() => setAangevinkt(new Set(recept.ingredienten.map((_, i) => i)))}
+              >
+                Alles
+              </button>
+              <button type="button" onClick={() => setAangevinkt(new Set())}>
+                Geen
+              </button>
+            </div>
+          </div>
           <ul className="space-y-1 text-sm">
-            {recept.ingredienten.map((ingredient, i) => {
-              const ratio =
-                recept.porties && weergavePorties ? weergavePorties / recept.porties : 1;
-              const weergave =
-                ingredient.hoeveelheid != null && ratio !== 1
-                  ? { ...ingredient, hoeveelheid: schaalHoeveelheid(ingredient.hoeveelheid, ratio) }
-                  : ingredient;
-              return (
-                <li key={i} className="flex items-start gap-2">
-                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                  {formatteerIngredient(weergave)}
-                </li>
-              );
-            })}
+            {recept.ingredienten.map((ingredient, i) => (
+              <li key={i}>
+                <label className="flex cursor-pointer items-start gap-2">
+                  <input
+                    type="checkbox"
+                    checked={aangevinkt.has(i)}
+                    onChange={(e) =>
+                      setAangevinkt((huidig) => {
+                        const next = new Set(huidig);
+                        if (e.target.checked) next.add(i);
+                        else next.delete(i);
+                        return next;
+                      })
+                    }
+                    className="mt-1 h-4 w-4 accent-primary"
+                  />
+                  <span>{ingredient}</span>
+                </label>
+              </li>
+            ))}
           </ul>
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={toevoegenBezig}
+            onClick={() => void toevoegenAanBoodschappen()}
+            className="mt-3 w-full"
+          >
+            <ShoppingBasket className="h-4 w-4" />
+            {toevoegenBezig ? "Toevoegen…" : "Toevoegen aan boodschappenlijst"}
+          </Button>
         </SectionCard>
       )}
 
-      {recept.instructies && (
+      {recept.stappen.length > 0 && (
         <SectionCard>
           <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             Bereidingswijze
           </h2>
-          <p className="whitespace-pre-line text-sm">{recept.instructies}</p>
+          <ol className="list-inside list-decimal space-y-1 text-sm">
+            {recept.stappen.map((stap, i) => (
+              <li key={i}>{stap}</li>
+            ))}
+          </ol>
         </SectionCard>
       )}
 
-      {!recept.beschrijving && recept.ingredienten.length === 0 && !recept.instructies && (
+      {!recept.beschrijving && recept.ingredienten.length === 0 && recept.stappen.length === 0 && (
         <SectionCard className="text-center">
           <p className="text-sm text-muted-foreground">Nog geen details toegevoegd.</p>
           <Button variant="secondary" onClick={() => setBewerken(true)} className="mt-3">

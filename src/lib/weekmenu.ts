@@ -21,6 +21,16 @@ export async function listWeek(startDatum: string, eindDatum: string) {
   return data;
 }
 
+export async function getDag(datum: string) {
+  const { data, error } = await supabase
+    .from("weekmenu_items")
+    .select("*")
+    .eq("datum", datum)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
 export async function createDag(
   gezinId: string,
   userId: string,

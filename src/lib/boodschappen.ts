@@ -1,7 +1,6 @@
 // Boodschappen-CRUD — RLS scoopt op gezin_id = current_gezin_id().
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
-import { formatteerIngredient, naarIngredienten } from "@/lib/recepten";
 
 export type BoodschappenItem = Tables<"boodschappen_items">;
 
@@ -17,6 +16,22 @@ export async function addItem(gezinId: string, userId: string, naam: string) {
     .insert({ gezin_id: gezinId, naam, created_by: userId, bron_recept_id: null })
     .select()
     .single();
+  if (error) throw error;
+  return data;
+}
+
+// Voegt meerdere handmatige items in één keer toe — gebruikt door het
+// receptdetail om aangevinkte ingrediënten naar de boodschappenlijst te
+// sturen. Bewust zonder bron_recept_id (dus geen "manueel toegevoegd"
+// item verdwijnt als de lijst opnieuw uit het weekmenu wordt gegenereerd).
+export async function addItems(gezinId: string, userId: string, namen: string[]) {
+  if (namen.length === 0) return [];
+  const { data, error } = await supabase
+    .from("boodschappen_items")
+    .insert(
+      namen.map((naam) => ({ gezin_id: gezinId, naam, created_by: userId, bron_recept_id: null })),
+    )
+    .select();
   if (error) throw error;
   return data;
 }
@@ -73,9 +88,8 @@ export async function genereerVanWeekmenu(
   const bestaandeSet = new Set((bestaande ?? []).map((b) => `${b.bron_recept_id}::${b.naam}`));
 
   const nieuweItems = (recepten ?? []).flatMap((r) =>
-    naarIngredienten(r.ingredienten)
-      .map(formatteerIngredient)
-      .filter((naam) => naam !== "" && !bestaandeSet.has(`${r.id}::${naam}`))
+    r.ingredienten
+      .filter((naam) => naam.trim() !== "" && !bestaandeSet.has(`${r.id}::${naam}`))
       .map((naam) => ({
         gezin_id: gezinId,
         naam,
