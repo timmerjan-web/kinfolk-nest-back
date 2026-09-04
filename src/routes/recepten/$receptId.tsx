@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Clock, Minus, Pencil, Plus, Trash2, Users as UsersIcon } from "lucide-react";
+import { Clock, Minus, MoreVertical, Pencil, Plus, Trash2, Users as UsersIcon } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, SectionCard } from "@/components/app-shell";
 import { RequireGezin } from "@/components/require-auth";
@@ -33,6 +33,7 @@ function ReceptDetailPage() {
   const [bewerken, setBewerken] = useState(false);
   const [bezig, setBezig] = useState(false);
   const [weergavePorties, setWeergavePorties] = useState<number | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     getRecept(receptId)
@@ -115,14 +116,32 @@ function ReceptDetailPage() {
           >
             <Pencil className="h-4 w-4" />
           </button>
-          <button
-            onClick={() => void verwijderen()}
-            disabled={bezig}
-            aria-label="Verwijderen"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur disabled:opacity-50"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setMenuOpen((o) => !o)}
+              aria-label="Meer opties"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur"
+            >
+              <MoreVertical className="h-4 w-4" />
+            </button>
+            {menuOpen && (
+              <div
+                className="surface-light absolute right-0 top-full z-50 mt-2 w-44 rounded-xl border border-border bg-card p-2 text-sm text-card-foreground shadow-elevated"
+                onMouseLeave={() => setMenuOpen(false)}
+              >
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    void verwijderen();
+                  }}
+                  disabled={bezig}
+                  className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-destructive hover:bg-muted disabled:opacity-50"
+                >
+                  <Trash2 className="h-4 w-4" /> Verwijderen
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       }
     >
@@ -162,6 +181,9 @@ function ReceptDetailPage() {
 
       {recept.beschrijving && (
         <SectionCard className="mb-3">
+          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Beschrijving
+          </h2>
           <p className="text-sm text-muted-foreground">{recept.beschrijving}</p>
         </SectionCard>
       )}

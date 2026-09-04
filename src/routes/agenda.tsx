@@ -1,16 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
-import { CalendarPlus, ChevronDown, ChevronUp, Trash2, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, SectionCard } from "@/components/app-shell";
 import { RequireGezin } from "@/components/require-auth";
 import { AgendaForm } from "@/components/agenda-form";
+import { PersoonBadge } from "@/components/persoon-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { foutTekst } from "@/lib/errors";
-import { kleurVoorPersoon } from "@/lib/persoon";
 import {
   createAgendaItem,
   dagLabel,
@@ -197,7 +197,7 @@ function AgendaPage() {
           aria-label="Nieuwe afspraak"
           className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur"
         >
-          {nieuwOpen ? <X className="h-4 w-4" /> : <CalendarPlus className="h-4 w-4" />}
+          {nieuwOpen ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
         </button>
       }
     >
@@ -359,11 +359,11 @@ function AgendaRij({
   const maker = item.created_by ? leden.find((l) => l.id === item.created_by) : undefined;
   return (
     <li className="flex items-start gap-2 rounded-lg px-2 py-1.5 hover:bg-muted">
-      <span
-        className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${
-          item.created_by ? kleurVoorPersoon(item.created_by) : "bg-muted-foreground/30"
-        }`}
-      />
+      {maker ? (
+        <PersoonBadge naam={maker.naam} gebruikerId={maker.id} className="mt-0.5" />
+      ) : (
+        <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-muted-foreground/30" />
+      )}
       <div className="min-w-0 flex-1">
         <p className={`text-sm ${verleden ? "text-muted-foreground" : ""}`}>{item.titel}</p>
         <p className="text-[11px] text-muted-foreground">
@@ -386,9 +386,7 @@ function AgendaRij({
 function ExternRij({ afspraak }: { afspraak: ExternAfspraakMetPersoon }) {
   return (
     <li className="flex items-start gap-2 rounded-lg border border-dashed border-border px-2 py-1.5">
-      <span
-        className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${kleurVoorPersoon(afspraak.gebruiker_id)}`}
-      />
+      <PersoonBadge naam={afspraak.naam} gebruikerId={afspraak.gebruiker_id} className="mt-0.5" />
       <div className="min-w-0 flex-1">
         <p className="text-sm text-muted-foreground">{afspraak.titel}</p>
         <p className="text-[11px] text-muted-foreground">

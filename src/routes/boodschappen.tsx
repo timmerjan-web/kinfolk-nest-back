@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth";
 import { foutTekst } from "@/lib/errors";
+import { kapitaliseer } from "@/lib/tekst";
 import {
   addItem,
   deleteItem,
@@ -50,7 +51,7 @@ function BoodschappenPage() {
     if (!profile?.gezin_id || !user || !nieuweNaam.trim()) return;
     setBezig(true);
     try {
-      const item = await addItem(profile.gezin_id, user.id, nieuweNaam.trim());
+      const item = await addItem(profile.gezin_id, user.id, kapitaliseer(nieuweNaam.trim()));
       setItems((huidig) => [...(huidig ?? []), item]);
       setNieuweNaam("");
     } catch (err) {

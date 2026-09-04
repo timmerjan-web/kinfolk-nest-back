@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Herhaling, KlusjeInvoer } from "@/lib/klusjes";
 import type { KlusSjabloon } from "@/lib/klusSjablonen";
+import { kapitaliseer } from "@/lib/tekst";
 
 const selectClass =
   "mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:text-sm";
@@ -48,7 +49,8 @@ export function KlusjeForm({
     e.preventDefault();
     const gekozenSjabloon =
       bron === "catalogus" ? sjablonen.find((s) => s.id === sjabloonId) : undefined;
-    const finaleTitel = bron === "catalogus" ? (gekozenSjabloon?.titel ?? "") : titel.trim();
+    const finaleTitel =
+      bron === "catalogus" ? (gekozenSjabloon?.titel ?? "") : kapitaliseer(titel.trim());
     if (!finaleTitel) return;
     void onOpslaan({
       titel: finaleTitel,

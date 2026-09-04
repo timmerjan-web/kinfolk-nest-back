@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { AppShell, SectionCard } from "@/components/app-shell";
 import { RequireGezin } from "@/components/require-auth";
 import { WeekmenuDagForm } from "@/components/weekmenu-dag-form";
+import { PersoonBadge } from "@/components/persoon-badge";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { foutTekst } from "@/lib/errors";
@@ -143,58 +144,78 @@ function WeekmenuPage() {
             return (
               <li key={datum}>
                 <div
-                  className={`rounded-xl border p-3 shadow-card ${vandaag ? "border-primary bg-primary/5" : "border-border bg-card"}`}
+                  className={`rounded-xl border shadow-card ${vandaag ? "border-primary bg-primary/5" : "border-border bg-card"} ${
+                    !item && bewerkDatum !== datum ? "p-2" : "p-3"
+                  }`}
                 >
-                  <div className="mb-1 flex items-center justify-between">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                      {DAGNAMEN[i]}
-                      {vandaag && <span className="ml-1 text-primary">· vandaag</span>}
-                    </p>
-                    {item && bewerkDatum !== datum && (
-                      <button
-                        onClick={() => setBewerkDatum(datum)}
-                        aria-label="Bewerken"
-                        className="text-muted-foreground hover:text-foreground"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                    )}
-                  </div>
-
-                  {bewerkDatum === datum ? (
-                    <WeekmenuDagForm
-                      initieel={
-                        item
-                          ? {
-                              titel: item.titel,
-                              recept_id: item.recept_id,
-                              kok: item.kok,
-                              notitie: item.notitie,
-                            }
-                          : undefined
-                      }
-                      leden={leden}
-                      recepten={recepten}
-                      bezig={bezig}
-                      onOpslaan={(invoer) => opslaan(datum, item, invoer)}
-                      onAnnuleren={() => setBewerkDatum(null)}
-                      onVerwijderen={item ? () => verwijderen(item) : undefined}
-                    />
-                  ) : item ? (
-                    <div>
-                      <p className="font-display text-sm leading-tight">{item.titel}</p>
-                      {kokNaam && <p className="text-xs text-muted-foreground">{kokNaam} kookt</p>}
-                      {item.notitie && (
-                        <p className="mt-1 text-xs text-muted-foreground">{item.notitie}</p>
-                      )}
-                    </div>
-                  ) : (
+                  {!item && bewerkDatum !== datum ? (
+                    // Compact: lege dag krijgt maar één regel i.p.v. een volledige kaart.
                     <button
                       onClick={() => setBewerkDatum(datum)}
-                      className="flex items-center gap-1 text-sm font-medium text-secondary"
+                      className="flex w-full items-center justify-between gap-2"
                     >
-                      <Plus className="h-3.5 w-3.5" /> Maaltijd toevoegen
+                      <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        {DAGNAMEN[i]}
+                        {vandaag && <span className="ml-1 text-primary">· vandaag</span>}
+                      </span>
+                      <span className="flex items-center gap-1 text-sm font-medium text-secondary">
+                        <Plus className="h-3.5 w-3.5" /> Maaltijd toevoegen
+                      </span>
                     </button>
+                  ) : (
+                    <>
+                      <div className="mb-1 flex items-center justify-between">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                          {DAGNAMEN[i]}
+                          {vandaag && <span className="ml-1 text-primary">· vandaag</span>}
+                        </p>
+                        {item && bewerkDatum !== datum && (
+                          <button
+                            onClick={() => setBewerkDatum(datum)}
+                            aria-label="Bewerken"
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
+
+                      {bewerkDatum === datum ? (
+                        <WeekmenuDagForm
+                          initieel={
+                            item
+                              ? {
+                                  titel: item.titel,
+                                  recept_id: item.recept_id,
+                                  kok: item.kok,
+                                  notitie: item.notitie,
+                                }
+                              : undefined
+                          }
+                          leden={leden}
+                          recepten={recepten}
+                          bezig={bezig}
+                          onOpslaan={(invoer) => opslaan(datum, item, invoer)}
+                          onAnnuleren={() => setBewerkDatum(null)}
+                          onVerwijderen={item ? () => verwijderen(item) : undefined}
+                        />
+                      ) : (
+                        item && (
+                          <div>
+                            <p className="font-display text-sm leading-tight">{item.titel}</p>
+                            {kokNaam && item.kok && (
+                              <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+                                <PersoonBadge naam={kokNaam} gebruikerId={item.kok} />
+                                {kokNaam} kookt
+                              </p>
+                            )}
+                            {item.notitie && (
+                              <p className="mt-1 text-xs text-muted-foreground">{item.notitie}</p>
+                            )}
+                          </div>
+                        )
+                      )}
+                    </>
                   )}
                 </div>
               </li>

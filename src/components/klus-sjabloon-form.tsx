@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { KLUS_ICONEN } from "@/lib/klusIconen";
 import type { KlusSjabloonInvoer } from "@/lib/klusSjablonen";
+import { kapitaliseer } from "@/lib/tekst";
 
 export function KlusSjabloonForm({
   initieel,
@@ -21,7 +22,7 @@ export function KlusSjabloonForm({
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (!titel.trim()) return;
-    void onOpslaan({ titel: titel.trim(), icoon });
+    void onOpslaan({ titel: kapitaliseer(titel.trim()), icoon });
     if (!initieel) {
       setTitel("");
       setIcoon("ListChecks");

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { Ingredient, ReceptInvoer } from "@/lib/recepten";
+import { kapitaliseer } from "@/lib/tekst";
 
 const LEEG_INGREDIENT: Ingredient = { naam: "", hoeveelheid: null, eenheid: null };
 
@@ -50,7 +51,7 @@ export function ReceptForm({
   const submit = (e: FormEvent) => {
     e.preventDefault();
     void onIndienen({
-      titel: titel.trim(),
+      titel: kapitaliseer(titel.trim()),
       beschrijving: beschrijving.trim() || null,
       bereidingstijd_minuten: bereidingstijd.trim() ? Number(bereidingstijd) : null,
       porties: porties.trim() ? Number(porties) : null,

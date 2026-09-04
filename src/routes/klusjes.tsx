@@ -6,6 +6,7 @@ import { AppShell, SectionCard } from "@/components/app-shell";
 import { RequireGezin } from "@/components/require-auth";
 import { Button } from "@/components/ui/button";
 import { KlusjeForm } from "@/components/klusje-form";
+import { PersoonBadge } from "@/components/persoon-badge";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { foutTekst } from "@/lib/errors";
@@ -249,13 +250,24 @@ function KlusjeRij({
           {klusje.titel}
         </p>
         {(klusje.deadline ?? naam ?? herhalingLabel) && (
-          <p className={`text-[11px] ${teLaat ? "text-destructive" : "text-muted-foreground"}`}>
-            {klusje.deadline && formatteerDeadline(klusje.deadline)}
-            {klusje.deadline && klusje.deadline_tijd && ` om ${formatteerTijd(klusje.deadline_tijd)}`}
-            {klusje.deadline && naam && " · "}
-            {naam}
-            {(klusje.deadline ?? naam) && herhalingLabel && " · "}
-            {herhalingLabel}
+          <p
+            className={`flex items-center gap-1 text-[11px] ${teLaat ? "text-destructive" : "text-muted-foreground"}`}
+          >
+            <span>
+              {klusje.deadline && formatteerDeadline(klusje.deadline)}
+              {klusje.deadline &&
+                klusje.deadline_tijd &&
+                ` om ${formatteerTijd(klusje.deadline_tijd)}`}
+              {(klusje.deadline ?? naam) && herhalingLabel && " · "}
+              {herhalingLabel}
+            </span>
+            {naam && klusje.toegewezen_aan && (
+              <span className="flex items-center gap-1">
+                {(klusje.deadline ?? herhalingLabel) && "·"}
+                <PersoonBadge naam={naam} gebruikerId={klusje.toegewezen_aan} />
+                {naam}
+              </span>
+            )}
           </p>
         )}
       </div>
