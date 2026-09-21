@@ -45,9 +45,9 @@ function valideerRij(ruw: Record<string, unknown>, rijnummer: number): ImportRij
   if (!categorieRuw) {
     fouten.push("categorie ontbreekt");
   } else if (!(RECEPT_CATEGORIEEN as readonly string[]).includes(categorieRuw)) {
-    fouten.push(
-      `categorie "${ruw["categorie"]}" is ongeldig (verwacht: ${RECEPT_CATEGORIEEN.join(" of ")})`,
-    );
+    const laatste = RECEPT_CATEGORIEEN[RECEPT_CATEGORIEEN.length - 1];
+    const verwacht = `${RECEPT_CATEGORIEEN.slice(0, -1).join(", ")} of ${laatste}`;
+    fouten.push(`categorie "${ruw["categorie"]}" is ongeldig (verwacht: ${verwacht})`);
   }
 
   let porties: number | null = null;

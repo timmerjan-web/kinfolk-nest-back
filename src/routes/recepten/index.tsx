@@ -7,7 +7,13 @@ import { RequireGezin } from "@/components/require-auth";
 import { PlanReceptButton } from "@/components/plan-recept-button";
 import { useAuth } from "@/lib/auth";
 import { foutTekst } from "@/lib/errors";
-import { categorieLabel, listRecepten, RECEPT_CATEGORIEEN, type Recept } from "@/lib/recepten";
+import {
+  categorieLabel,
+  listRecepten,
+  RECEPT_CATEGORIEEN,
+  STANDAARD_CATEGORIE,
+  type Recept,
+} from "@/lib/recepten";
 import { useReceptFavorieten } from "@/lib/receptFavorieten";
 
 export const Route = createFileRoute("/recepten/")({
@@ -22,7 +28,7 @@ export const Route = createFileRoute("/recepten/")({
 function ReceptenPage() {
   const { profile } = useAuth();
   const [recepten, setRecepten] = useState<Recept[] | null>(null);
-  const [tab, setTab] = useState<string>(RECEPT_CATEGORIEEN[1]);
+  const [tab, setTab] = useState<string>(STANDAARD_CATEGORIE);
   const [zoek, setZoek] = useState("");
   const [actieveTags, setActieveTags] = useState<Set<string>>(new Set());
   const [alleenFavorieten, setAlleenFavorieten] = useState(false);

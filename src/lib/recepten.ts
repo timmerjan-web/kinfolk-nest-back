@@ -7,8 +7,9 @@ import type { Tables } from "@/integrations/supabase/types";
 export type Recept = Tables<"recepten">;
 
 // Vrije-tekst-lijst i.p.v. een vaste set: nieuwe categorieën toevoegen
-// (Lunch, Nagerecht, …) is dus enkel deze lijst uitbreiden, geen migratie.
-export const RECEPT_CATEGORIEEN = ["ontbijt", "maaltijd"] as const;
+// (Nagerecht, …) is dus enkel deze lijst uitbreiden, geen migratie.
+export const RECEPT_CATEGORIEEN = ["ontbijt", "lunch", "maaltijd"] as const;
+export const STANDAARD_CATEGORIE: (typeof RECEPT_CATEGORIEEN)[number] = "maaltijd";
 
 export function categorieLabel(categorie: string): string {
   return categorie.charAt(0).toUpperCase() + categorie.slice(1);

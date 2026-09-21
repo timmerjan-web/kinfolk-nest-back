@@ -3,7 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { RECEPT_CATEGORIEEN, categorieLabel, type ReceptInvoer } from "@/lib/recepten";
+import {
+  RECEPT_CATEGORIEEN,
+  STANDAARD_CATEGORIE,
+  categorieLabel,
+  type ReceptInvoer,
+} from "@/lib/recepten";
 import { kapitaliseer, naarRegels, naarTags } from "@/lib/tekst";
 
 export function ReceptForm({
@@ -18,7 +23,7 @@ export function ReceptForm({
   onIndienen: (invoer: ReceptInvoer) => void | Promise<void>;
 }) {
   const [titel, setTitel] = useState(initieel?.titel ?? "");
-  const [categorie, setCategorie] = useState(initieel?.categorie ?? RECEPT_CATEGORIEEN[1]);
+  const [categorie, setCategorie] = useState(initieel?.categorie ?? STANDAARD_CATEGORIE);
   const [beschrijving, setBeschrijving] = useState(initieel?.beschrijving ?? "");
   const [bereidingstijd, setBereidingstijd] = useState(
     initieel?.bereidingstijd_minuten != null ? String(initieel.bereidingstijd_minuten) : "",
