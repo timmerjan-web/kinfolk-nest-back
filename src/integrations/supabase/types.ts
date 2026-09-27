@@ -556,6 +556,8 @@ export type Database = {
         Row: {
           bereidingstijd_minuten: number | null
           beschrijving: string | null
+          bron: string | null
+          bron_url: string | null
           categorie: string
           created_at: string
           created_by: string | null
@@ -564,14 +566,19 @@ export type Database = {
           ingredienten: string[]
           porties: number | null
           recept_url: string | null
+          ruwe_tekst: string | null
           stappen: string[]
+          status: string
           tags: string[]
           titel: string
+          toegevoegd_op: string
           updated_at: string
         }
         Insert: {
           bereidingstijd_minuten?: number | null
           beschrijving?: string | null
+          bron?: string | null
+          bron_url?: string | null
           categorie?: string
           created_at?: string
           created_by?: string | null
@@ -580,14 +587,19 @@ export type Database = {
           ingredienten?: string[]
           porties?: number | null
           recept_url?: string | null
+          ruwe_tekst?: string | null
           stappen?: string[]
+          status?: string
           tags?: string[]
           titel: string
+          toegevoegd_op?: string
           updated_at?: string
         }
         Update: {
           bereidingstijd_minuten?: number | null
           beschrijving?: string | null
+          bron?: string | null
+          bron_url?: string | null
           categorie?: string
           created_at?: string
           created_by?: string | null
@@ -596,9 +608,12 @@ export type Database = {
           ingredienten?: string[]
           porties?: number | null
           recept_url?: string | null
+          ruwe_tekst?: string | null
           stappen?: string[]
+          status?: string
           tags?: string[]
           titel?: string
+          toegevoegd_op?: string
           updated_at?: string
         }
         Relationships: [

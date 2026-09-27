@@ -16,11 +16,20 @@ export function ReceptForm({
   bezig,
   indienenLabel,
   onIndienen,
+  tweedeActie,
 }: {
   initieel?: Partial<ReceptInvoer>;
   bezig: boolean;
   indienenLabel: string;
   onIndienen: (invoer: ReceptInvoer) => void | Promise<void>;
+  // Voor het concept-bewerkscherm: een tweede knop naast de primaire
+  // ("Opslaan" blijft concept, "Publiceren" maakt er een definitief
+  // recept van) — beide werken op dezelfde, hier opgebouwde invoer.
+  tweedeActie?: {
+    label: string;
+    bezig: boolean;
+    onIndienen: (invoer: ReceptInvoer) => void | Promise<void>;
+  };
 }) {
   const [titel, setTitel] = useState(initieel?.titel ?? "");
   const [categorie, setCategorie] = useState(initieel?.categorie ?? STANDAARD_CATEGORIE);
@@ -43,15 +52,14 @@ export function ReceptForm({
   const [receptUrl, setReceptUrl] = useState(initieel?.recept_url ?? "");
   const [fout, setFout] = useState<string | null>(null);
 
-  const submit = (e: FormEvent) => {
-    e.preventDefault();
+  const bouwInvoer = (): ReceptInvoer | null => {
     const ing = naarRegels(ingredienten);
     if (ing.length === 0) {
       setFout("Voeg minstens één ingrediënt toe (per regel).");
-      return;
+      return null;
     }
     setFout(null);
-    void onIndienen({
+    return {
       titel: kapitaliseer(titel.trim()),
       categorie,
       beschrijving: beschrijving.trim() || null,
@@ -61,7 +69,18 @@ export function ReceptForm({
       stappen: naarRegels(stappen),
       tags: naarTags(tags),
       recept_url: receptUrl.trim() || null,
-    });
+    };
+  };
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    const invoer = bouwInvoer();
+    if (invoer) void onIndienen(invoer);
+  };
+
+  const submitTweedeActie = () => {
+    const invoer = bouwInvoer();
+    if (invoer) void tweedeActie?.onIndienen(invoer);
   };
 
   return (
@@ -186,9 +205,31 @@ export function ReceptForm({
         />
       </div>
 
-      <Button type="submit" disabled={bezig || !titel.trim()} className="w-full">
-        {bezig ? "Bezig…" : indienenLabel}
-      </Button>
+      {tweedeActie ? (
+        <div className="flex gap-2">
+          <Button
+            type="submit"
+            variant="outline"
+            disabled={bezig || !titel.trim()}
+            className="flex-1"
+          >
+            {bezig ? "Bezig…" : indienenLabel}
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={tweedeActie.bezig || !titel.trim()}
+            onClick={submitTweedeActie}
+            className="flex-1"
+          >
+            {tweedeActie.bezig ? "Bezig…" : tweedeActie.label}
+          </Button>
+        </div>
+      ) : (
+        <Button type="submit" disabled={bezig || !titel.trim()} className="w-full">
+          {bezig ? "Bezig…" : indienenLabel}
+        </Button>
+      )}
     </form>
   );
 }

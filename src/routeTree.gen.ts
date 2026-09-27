@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BoodschappenRouteImport } from './routes/boodschappen'
+import { Route as DeelOntvangenRouteImport } from './routes/deel-ontvangen'
 import { Route as FotosRouteImport } from './routes/fotos'
 import { Route as GezinRouteImport } from './routes/gezin'
 import { Route as KlusSjablonenRouteImport } from './routes/klus-sjablonen'
@@ -26,6 +27,8 @@ import { Route as ReceptenIndexRouteImport } from './routes/recepten/index'
 import { Route as ReceptenReceptIdRouteImport } from './routes/recepten/$receptId'
 import { Route as ReceptenImportRouteImport } from './routes/recepten/import'
 import { Route as ReceptenNieuwRouteImport } from './routes/recepten/nieuw'
+import { Route as ReceptenConceptenIndexRouteImport } from './routes/recepten/concepten/index'
+import { Route as ReceptenConceptenReceptIdRouteImport } from './routes/recepten/concepten/$receptId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -45,6 +48,11 @@ const AuthRoute = AuthRouteImport.update({
 const BoodschappenRoute = BoodschappenRouteImport.update({
   id: '/boodschappen',
   path: '/boodschappen',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DeelOntvangenRoute = DeelOntvangenRouteImport.update({
+  id: '/deel-ontvangen',
+  path: '/deel-ontvangen',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FotosRoute = FotosRouteImport.update({
@@ -112,12 +120,24 @@ const ReceptenNieuwRoute = ReceptenNieuwRouteImport.update({
   path: '/recepten/nieuw',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReceptenConceptenIndexRoute = ReceptenConceptenIndexRouteImport.update({
+  id: '/recepten/concepten/',
+  path: '/recepten/concepten/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReceptenConceptenReceptIdRoute =
+  ReceptenConceptenReceptIdRouteImport.update({
+    id: '/recepten/concepten/$receptId',
+    path: '/recepten/concepten/$receptId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRoute
   '/auth': typeof AuthRoute
   '/boodschappen': typeof BoodschappenRoute
+  '/deel-ontvangen': typeof DeelOntvangenRoute
   '/fotos': typeof FotosRoute
   '/gezin': typeof GezinRoute
   '/klus-sjablonen': typeof KlusSjablonenRoute
@@ -131,12 +151,15 @@ export interface FileRoutesByFullPath {
   '/recepten/import': typeof ReceptenImportRoute
   '/recepten/nieuw': typeof ReceptenNieuwRoute
   '/recepten/': typeof ReceptenIndexRoute
+  '/recepten/concepten/$receptId': typeof ReceptenConceptenReceptIdRoute
+  '/recepten/concepten/': typeof ReceptenConceptenIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRoute
   '/auth': typeof AuthRoute
   '/boodschappen': typeof BoodschappenRoute
+  '/deel-ontvangen': typeof DeelOntvangenRoute
   '/fotos': typeof FotosRoute
   '/gezin': typeof GezinRoute
   '/klus-sjablonen': typeof KlusSjablonenRoute
@@ -150,6 +173,8 @@ export interface FileRoutesByTo {
   '/recepten/import': typeof ReceptenImportRoute
   '/recepten/nieuw': typeof ReceptenNieuwRoute
   '/recepten': typeof ReceptenIndexRoute
+  '/recepten/concepten/$receptId': typeof ReceptenConceptenReceptIdRoute
+  '/recepten/concepten': typeof ReceptenConceptenIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -157,6 +182,7 @@ export interface FileRoutesById {
   '/agenda': typeof AgendaRoute
   '/auth': typeof AuthRoute
   '/boodschappen': typeof BoodschappenRoute
+  '/deel-ontvangen': typeof DeelOntvangenRoute
   '/fotos': typeof FotosRoute
   '/gezin': typeof GezinRoute
   '/klus-sjablonen': typeof KlusSjablonenRoute
@@ -170,6 +196,8 @@ export interface FileRoutesById {
   '/recepten/import': typeof ReceptenImportRoute
   '/recepten/nieuw': typeof ReceptenNieuwRoute
   '/recepten/': typeof ReceptenIndexRoute
+  '/recepten/concepten/$receptId': typeof ReceptenConceptenReceptIdRoute
+  '/recepten/concepten/': typeof ReceptenConceptenIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -178,6 +206,7 @@ export interface FileRouteTypes {
     | '/agenda'
     | '/auth'
     | '/boodschappen'
+    | '/deel-ontvangen'
     | '/fotos'
     | '/gezin'
     | '/klus-sjablonen'
@@ -191,12 +220,15 @@ export interface FileRouteTypes {
     | '/recepten/import'
     | '/recepten/nieuw'
     | '/recepten/'
+    | '/recepten/concepten/$receptId'
+    | '/recepten/concepten/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/agenda'
     | '/auth'
     | '/boodschappen'
+    | '/deel-ontvangen'
     | '/fotos'
     | '/gezin'
     | '/klus-sjablonen'
@@ -210,12 +242,15 @@ export interface FileRouteTypes {
     | '/recepten/import'
     | '/recepten/nieuw'
     | '/recepten'
+    | '/recepten/concepten/$receptId'
+    | '/recepten/concepten'
   id:
     | '__root__'
     | '/'
     | '/agenda'
     | '/auth'
     | '/boodschappen'
+    | '/deel-ontvangen'
     | '/fotos'
     | '/gezin'
     | '/klus-sjablonen'
@@ -229,6 +264,8 @@ export interface FileRouteTypes {
     | '/recepten/import'
     | '/recepten/nieuw'
     | '/recepten/'
+    | '/recepten/concepten/$receptId'
+    | '/recepten/concepten/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -236,6 +273,7 @@ export interface RootRouteChildren {
   AgendaRoute: typeof AgendaRoute
   AuthRoute: typeof AuthRoute
   BoodschappenRoute: typeof BoodschappenRoute
+  DeelOntvangenRoute: typeof DeelOntvangenRoute
   FotosRoute: typeof FotosRoute
   GezinRoute: typeof GezinRoute
   KlusSjablonenRoute: typeof KlusSjablonenRoute
@@ -249,6 +287,8 @@ export interface RootRouteChildren {
   ReceptenImportRoute: typeof ReceptenImportRoute
   ReceptenNieuwRoute: typeof ReceptenNieuwRoute
   ReceptenIndexRoute: typeof ReceptenIndexRoute
+  ReceptenConceptenReceptIdRoute: typeof ReceptenConceptenReceptIdRoute
+  ReceptenConceptenIndexRoute: typeof ReceptenConceptenIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -279,6 +319,13 @@ declare module '@tanstack/react-router' {
       path: '/boodschappen'
       fullPath: '/boodschappen'
       preLoaderRoute: typeof BoodschappenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/deel-ontvangen': {
+      id: '/deel-ontvangen'
+      path: '/deel-ontvangen'
+      fullPath: '/deel-ontvangen'
+      preLoaderRoute: typeof DeelOntvangenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/fotos': {
@@ -372,6 +419,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReceptenNieuwRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/recepten/concepten/': {
+      id: '/recepten/concepten/'
+      path: '/recepten/concepten'
+      fullPath: '/recepten/concepten/'
+      preLoaderRoute: typeof ReceptenConceptenIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recepten/concepten/$receptId': {
+      id: '/recepten/concepten/$receptId'
+      path: '/recepten/concepten/$receptId'
+      fullPath: '/recepten/concepten/$receptId'
+      preLoaderRoute: typeof ReceptenConceptenReceptIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -380,6 +441,7 @@ const rootRouteChildren: RootRouteChildren = {
   AgendaRoute: AgendaRoute,
   AuthRoute: AuthRoute,
   BoodschappenRoute: BoodschappenRoute,
+  DeelOntvangenRoute: DeelOntvangenRoute,
   FotosRoute: FotosRoute,
   GezinRoute: GezinRoute,
   KlusSjablonenRoute: KlusSjablonenRoute,
@@ -393,6 +455,8 @@ const rootRouteChildren: RootRouteChildren = {
   ReceptenImportRoute: ReceptenImportRoute,
   ReceptenNieuwRoute: ReceptenNieuwRoute,
   ReceptenIndexRoute: ReceptenIndexRoute,
+  ReceptenConceptenReceptIdRoute: ReceptenConceptenReceptIdRoute,
+  ReceptenConceptenIndexRoute: ReceptenConceptenIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

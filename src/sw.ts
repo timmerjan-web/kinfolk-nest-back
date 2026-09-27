@@ -75,6 +75,39 @@ registerRoute(
   }),
 );
 
+// Web Share Target (manifest.share_target): Android levert de gedeelde
+// Instagram-post af als een POST-navigatie naar /deel-ontvangen. Dat kan
+// geen gewone SPA-route direct afhandelen — enkel de service worker kan
+// een POST onderscheppen. De FormData wordt hier uitgelezen en tijdelijk
+// weggezet in de Cache API (niet IndexedDB: die is binnen een SW-fetch-
+// handler synchroon genoeg beschikbaar en overleeft, net als IndexedDB,
+// een koude start van de PWA). De GET-route /deel-ontvangen (een gewone
+// React-pagina, ingelogd via de al-bestaande browsersessie) haalt de
+// weggezette data meteen weer op en verwijdert ze.
+const DEEL_ONTVANGEN_CACHE = "deel-ontvangen";
+const DEEL_ONTVANGEN_SLEUTEL = "/deel-ontvangen-payload";
+
+registerRoute(
+  ({ url }) => url.pathname.endsWith("/deel-ontvangen"),
+  async ({ request }) => {
+    const formData = await request.formData();
+    const payload = {
+      title: String(formData.get("title") ?? ""),
+      text: String(formData.get("text") ?? ""),
+      url: String(formData.get("url") ?? ""),
+    };
+    const cache = await caches.open(DEEL_ONTVANGEN_CACHE);
+    await cache.put(
+      DEEL_ONTVANGEN_SLEUTEL,
+      new Response(JSON.stringify(payload), {
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    return Response.redirect(request.url, 303);
+  },
+  "POST",
+);
+
 // Android/Chrome-pushmeldingen (Fase D klusjes-uitbreiding). De
 // payload komt van de send-push Edge Function, getriggerd door een
 // Database Webhook op klusjes.

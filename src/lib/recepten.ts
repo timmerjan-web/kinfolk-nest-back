@@ -28,7 +28,23 @@ export type ReceptInvoer = {
 };
 
 export async function listRecepten() {
-  const { data, error } = await supabase.from("recepten").select("*").order("titel");
+  const { data, error } = await supabase
+    .from("recepten")
+    .select("*")
+    .eq("status", "definitief")
+    .order("titel");
+  if (error) throw error;
+  return data;
+}
+
+// Concept-wachtrij (gedeeld vanuit Instagram, nog niet nagekeken) —
+// nieuwste eerst, los van de normale receptenlijst hierboven.
+export async function listConceptRecepten() {
+  const { data, error } = await supabase
+    .from("recepten")
+    .select("*")
+    .eq("status", "concept")
+    .order("toegevoegd_op", { ascending: false });
   if (error) throw error;
   return data;
 }
@@ -72,7 +88,62 @@ export async function updateRecept(id: string, invoer: ReceptInvoer) {
   return data;
 }
 
+// Slaat de (eventueel bewerkte) velden op én zet het concept meteen om
+// naar een normaal, zichtbaar recept.
+export async function publiceerRecept(id: string, invoer: ReceptInvoer) {
+  const { data, error } = await supabase
+    .from("recepten")
+    .update({ ...invoer, status: "definitief" })
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
 export async function deleteRecept(id: string) {
   const { error } = await supabase.from("recepten").delete().eq("id", id);
   if (error) throw error;
+}
+
+// Aanmaken vanuit "delen vanuit Instagram" — categorie blijft weg uit de
+// insert (en dus op de DB-default) als de parser hem niet kon herkennen;
+// nooit een gegokte waarde wegschrijven.
+export type ConceptInvoer = {
+  titel: string;
+  categorie?: string;
+  bereidingstijd_minuten: number | null;
+  porties: number | null;
+  ingredienten: string[];
+  stappen: string[];
+  tags: string[];
+  recept_url: string | null;
+  bron: string;
+  bron_url: string | null;
+  ruwe_tekst: string;
+};
+
+export async function createConceptRecept(gezinId: string, userId: string, invoer: ConceptInvoer) {
+  const { data, error } = await supabase
+    .from("recepten")
+    .insert({
+      titel: invoer.titel,
+      ...(invoer.categorie ? { categorie: invoer.categorie } : {}),
+      bereidingstijd_minuten: invoer.bereidingstijd_minuten,
+      porties: invoer.porties,
+      ingredienten: invoer.ingredienten,
+      stappen: invoer.stappen,
+      tags: invoer.tags,
+      recept_url: invoer.recept_url,
+      bron: invoer.bron,
+      bron_url: invoer.bron_url,
+      ruwe_tekst: invoer.ruwe_tekst,
+      gezin_id: gezinId,
+      created_by: userId,
+      status: "concept",
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
 }

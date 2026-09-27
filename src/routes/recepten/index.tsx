@@ -1,6 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ChefHat, Clock, Plus, Search, Star, Upload, Users as UsersIcon } from "lucide-react";
+import {
+  ChefHat,
+  Clock,
+  Inbox,
+  Plus,
+  Search,
+  Star,
+  Upload,
+  Users as UsersIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, SectionCard } from "@/components/app-shell";
 import { RequireGezin } from "@/components/require-auth";
@@ -9,6 +18,7 @@ import { useAuth } from "@/lib/auth";
 import { foutTekst } from "@/lib/errors";
 import {
   categorieLabel,
+  listConceptRecepten,
   listRecepten,
   RECEPT_CATEGORIEEN,
   STANDAARD_CATEGORIE,
@@ -28,6 +38,7 @@ export const Route = createFileRoute("/recepten/")({
 function ReceptenPage() {
   const { profile } = useAuth();
   const [recepten, setRecepten] = useState<Recept[] | null>(null);
+  const [conceptAantal, setConceptAantal] = useState(0);
   const [tab, setTab] = useState<string>(STANDAARD_CATEGORIE);
   const [zoek, setZoek] = useState("");
   const [actieveTags, setActieveTags] = useState<Set<string>>(new Set());
@@ -38,6 +49,11 @@ function ReceptenPage() {
     listRecepten()
       .then(setRecepten)
       .catch((err) => toast.error(foutTekst(err, "Recepten laden mislukt.")));
+    listConceptRecepten()
+      .then((concepten) => setConceptAantal(concepten.length))
+      .catch(() => {
+        // Stil falen: de wachtrij-badge is decoratief, geen kritiek pad.
+      });
   }, []);
 
   const categorieen = useMemo(() => {
@@ -88,6 +104,18 @@ function ReceptenPage() {
       subtitle="Het gezinskookboek"
       action={
         <div className="flex items-center gap-1">
+          <Link
+            to="/recepten/concepten"
+            className="relative flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur"
+            aria-label="Concept-wachtrij"
+          >
+            <Inbox className="h-4 w-4" />
+            {conceptAantal > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-secondary px-1 text-[10px] font-bold text-secondary-foreground">
+                {conceptAantal}
+              </span>
+            )}
+          </Link>
           {profile?.rol === "ouder" && (
             <Link
               to="/recepten/import"
