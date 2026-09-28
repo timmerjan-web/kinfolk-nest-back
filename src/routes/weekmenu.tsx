@@ -126,14 +126,14 @@ function WeekmenuPage() {
           <button
             onClick={() => setWeekStart((w) => addDays(w, -7))}
             aria-label="Vorige week"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
           <button
             onClick={() => setWeekStart((w) => addDays(w, 7))}
             aria-label="Volgende week"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -163,7 +163,7 @@ function WeekmenuPage() {
                       onClick={() => setBewerkDatum(datum)}
                       className="flex w-full items-center justify-between gap-2"
                     >
-                      <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      <span className="shrink-0 text-[11px] font-semibold uppercase text-muted-foreground">
                         {DAGNAMEN[i]}
                         {vandaag && <span className="ml-1 text-primary">· vandaag</span>}
                       </span>
@@ -174,7 +174,7 @@ function WeekmenuPage() {
                   ) : (
                     <>
                       <div className="mb-1 flex items-center justify-between">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        <p className="text-[11px] font-semibold uppercase text-muted-foreground">
                           {DAGNAMEN[i]}
                           {vandaag && <span className="ml-1 text-primary">· vandaag</span>}
                         </p>

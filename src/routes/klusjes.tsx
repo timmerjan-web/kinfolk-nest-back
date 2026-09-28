@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { AppShell, SectionCard } from "@/components/app-shell";
 import { RequireGezin } from "@/components/require-auth";
 import { Button } from "@/components/ui/button";
+import { BevestigDialog } from "@/components/bevestig-dialog";
 import { KlusjeForm } from "@/components/klusje-form";
 import { PersoonBadge } from "@/components/persoon-badge";
 import { useAuth } from "@/lib/auth";
@@ -40,6 +41,7 @@ function KlusjesPage() {
   const [sjablonen, setSjablonen] = useState<KlusSjabloon[]>([]);
   const [nieuwOpen, setNieuwOpen] = useState(false);
   const [bezig, setBezig] = useState(false);
+  const [teVerwijderen, setTeVerwijderen] = useState<Klusje | null>(null);
 
   const laad = useCallback(() => {
     listKlusjes()
@@ -129,13 +131,19 @@ function KlusjesPage() {
     }
   };
 
-  const verwijderen = async (klusje: Klusje) => {
-    setKlusjes((huidig) => (huidig ?? []).filter((k) => k.id !== klusje.id));
+  const verwijderen = async () => {
+    const klusje = teVerwijderen;
+    if (!klusje) return;
+    setBezig(true);
     try {
       await deleteKlusje(klusje.id);
+      setKlusjes((huidig) => (huidig ?? []).filter((k) => k.id !== klusje.id));
+      setTeVerwijderen(null);
+      toast.success(`"${klusje.titel}" verwijderd.`);
     } catch (err) {
       toast.error(foutTekst(err, "Verwijderen mislukt."));
-      laad();
+    } finally {
+      setBezig(false);
     }
   };
 
@@ -151,7 +159,7 @@ function KlusjesPage() {
         <button
           onClick={() => setNieuwOpen((o) => !o)}
           aria-label="Nieuw klusje"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20"
         >
           {nieuwOpen ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
         </button>
@@ -193,7 +201,7 @@ function KlusjesPage() {
                     leden={leden}
                     vandaag={vandaag}
                     onToggle={toggle}
-                    onVerwijder={verwijderen}
+                    onVerwijder={setTeVerwijderen}
                   />
                 ))}
               </ul>
@@ -213,7 +221,7 @@ function KlusjesPage() {
                     leden={leden}
                     vandaag={vandaag}
                     onToggle={toggle}
-                    onVerwijder={verwijderen}
+                    onVerwijder={setTeVerwijderen}
                   />
                 ))}
               </ul>
@@ -221,6 +229,21 @@ function KlusjesPage() {
           )}
         </>
       )}
+
+      <BevestigDialog
+        open={teVerwijderen !== null}
+        onOpenChange={(open) => {
+          if (!open) setTeVerwijderen(null);
+        }}
+        titel="Klusje verwijderen?"
+        beschrijving={
+          teVerwijderen
+            ? `"${teVerwijderen.titel}" wordt definitief verwijderd. Dit kan niet ongedaan worden gemaakt.`
+            : ""
+        }
+        bezig={bezig}
+        onBevestig={verwijderen}
+      />
     </AppShell>
   );
 }

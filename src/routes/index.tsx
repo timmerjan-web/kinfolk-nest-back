@@ -25,7 +25,14 @@ type EerstkomendItem = {
 };
 
 export const Route = createFileRoute("/")({
-  head: () => ({ meta: [{ title: "Vandaag — Gezinsapp" }] }),
+  head: () => ({ meta: [
+    { title: "Vandaag — Gezinsapp" },
+    { name: "description", content: "Bekijk de klusjes, maaltijden, afspraken en herinneringen van vandaag in Gezinsapp." },
+    { property: "og:title", content: "Vandaag — Gezinsapp" },
+    { property: "og:description", content: "Bekijk de klusjes, maaltijden, afspraken en herinneringen van vandaag in Gezinsapp." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
+  ] }),
   component: () => (
     <RequireGezin>
       <TodayPage />
@@ -165,7 +172,7 @@ function TodayPage() {
 
   return (
     <AppShell title="Vandaag" subtitle={profile?.naam ? `${groet}, ${profile.naam}` : groet}>
-      <SectionCard className="mb-3">
+      <SectionCard className="mb-4 border-l-4 border-l-primary bg-soft-green">
         <div className="mb-1 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           <ListChecks className="h-4 w-4" /> Klusjes
         </div>
@@ -189,7 +196,7 @@ function TodayPage() {
         )}
       </SectionCard>
 
-      <SectionCard className="mb-3">
+      <SectionCard className="mb-4 border-l-4 border-l-secondary bg-soft-coral">
         <div className="mb-1 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           <ChefHat className="h-4 w-4" /> Weekmenu
         </div>
@@ -210,7 +217,7 @@ function TodayPage() {
       </SectionCard>
 
       {ivagoRonde && (
-        <SectionCard className="mb-3">
+        <SectionCard className="mb-4">
           <div className="mb-1 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             <Trash2 className="h-4 w-4" /> Afvalophaling
           </div>
@@ -229,7 +236,7 @@ function TodayPage() {
         </SectionCard>
       )}
 
-      <SectionCard className="mb-3">
+      <SectionCard className="mb-4 border-l-4 border-l-primary">
         <div className="mb-1 flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             <CalendarClock className="h-4 w-4" /> Eerstkomende afspraken
@@ -258,7 +265,7 @@ function TodayPage() {
         )}
       </SectionCard>
 
-      <SectionCard className="mb-3">
+      <SectionCard className="mb-4 border-l-4 border-l-accent bg-soft-yellow">
         <div className="mb-1 flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             <Gift className="h-4 w-4" /> Verjaardagen
