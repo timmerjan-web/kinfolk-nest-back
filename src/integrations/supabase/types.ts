@@ -807,6 +807,35 @@ export type Database = {
           },
         ]
       }
+      weekmenu_suggestie_log: {
+        Row: {
+          aangevraagd_door: string | null
+          created_at: string
+          gezin_id: string
+          id: string
+        }
+        Insert: {
+          aangevraagd_door?: string | null
+          created_at?: string
+          gezin_id: string
+          id?: string
+        }
+        Update: {
+          aangevraagd_door?: string | null
+          created_at?: string
+          gezin_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekmenu_suggestie_log_gezin_id_fkey"
+            columns: ["gezin_id"]
+            isOneToOne: false
+            referencedRelation: "gezinnen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

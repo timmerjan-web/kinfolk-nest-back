@@ -9,6 +9,7 @@ import {
   ListChecks,
   Plus,
   ShoppingCart,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, SectionCard } from "@/components/app-shell";
@@ -30,6 +31,7 @@ import {
   type WeekmenuItem,
 } from "@/lib/weekmenu";
 import { formatteerDeadline, toewijzen, type Klusje } from "@/lib/klusjes";
+import { vraagWeekmenuSuggestieAan, type WeekmenuVoorstel } from "@/lib/weekmenuSuggestie";
 import { formatteerDatum, formatteerTijd, type AgendaItem } from "@/lib/agenda";
 import { dagenTotVerjaardag, formatteerVerjaardag } from "@/lib/verjaardagen";
 import { listVerjaardagen, type VerjaardagContact } from "@/lib/verjaardagenContacten";
@@ -67,6 +69,8 @@ function WeekstartPage() {
   const [invulDatum, setInvulDatum] = useState<string | null>(null);
   const [bezig, setBezig] = useState(false);
   const [lijstBezig, setLijstBezig] = useState(false);
+  const [voorstellen, setVoorstellen] = useState<WeekmenuVoorstel[] | null>(null);
+  const [voorstelBezig, setVoorstelBezig] = useState(false);
 
   const dagen = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const eindDatum = dagen[6] ?? weekStart;
@@ -77,6 +81,7 @@ function WeekstartPage() {
     setWeekmenu(null);
     setKlusjes(null);
     setAgenda(null);
+    setVoorstellen(null);
 
     listWeek(startStr, eindStr)
       .then(setWeekmenu)
@@ -138,6 +143,57 @@ function WeekstartPage() {
     } finally {
       setBezig(false);
     }
+  };
+
+  const voorstelVoorDag = (datum: string) => voorstellen?.find((v) => v.datum === datum) ?? null;
+
+  const vraagSuggestieAan = async () => {
+    setVoorstelBezig(true);
+    try {
+      const nieuw = await vraagWeekmenuSuggestieAan(startStr);
+      if (nieuw.length === 0) {
+        toast.info("Geen suggesties gevonden — vul handmatig in.");
+      } else {
+        setVoorstellen(nieuw);
+        toast.success(`${nieuw.length} suggestie(s) klaar om te bekijken.`);
+      }
+    } catch (err) {
+      toast.error(foutTekst(err, "AI-suggestie ophalen is mislukt."));
+    } finally {
+      setVoorstelBezig(false);
+    }
+  };
+
+  const overnemenVoorstel = async (voorstel: WeekmenuVoorstel) => {
+    if (!profile?.gezin_id || !user) return;
+    setBezig(true);
+    try {
+      const resultaat = await createDag(profile.gezin_id, user.id, voorstel.datum, {
+        titel: voorstel.titel,
+        recept_id: voorstel.recept_id,
+        kok: null,
+        notitie: null,
+      });
+      setWeekmenu((huidig) => [
+        ...(huidig ?? []).filter((i) => i.datum !== voorstel.datum),
+        resultaat,
+      ]);
+      setVoorstellen((huidig) => (huidig ?? []).filter((v) => v.datum !== voorstel.datum));
+      toast.success("Weekmenu bijgewerkt.");
+    } catch (err) {
+      toast.error(foutTekst(err, "Opslaan mislukt."));
+    } finally {
+      setBezig(false);
+    }
+  };
+
+  const wisselenVoorstel = (datum: string) => {
+    setVoorstellen((huidig) => (huidig ?? []).filter((v) => v.datum !== datum));
+    setInvulDatum(datum);
+  };
+
+  const afwijzenVoorstel = (datum: string) => {
+    setVoorstellen((huidig) => (huidig ?? []).filter((v) => v.datum !== datum));
   };
 
   const wijsToe = async (klusje: Klusje, persoonId: string | null) => {
@@ -226,6 +282,18 @@ function WeekstartPage() {
         <div className="mb-2 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           <ChefHat className="h-4 w-4" /> Weekmenu
         </div>
+        <Button
+          onClick={() => void vraagSuggestieAan()}
+          disabled={
+            voorstelBezig || weekmenu === null || dagen.every((d) => itemVoorDag(toDatumString(d)))
+          }
+          variant="outline"
+          size="sm"
+          className="mb-2 w-full"
+        >
+          <Sparkles className="h-4 w-4" />
+          {voorstelBezig ? "Bezig met nadenken…" : "Stel een weekmenu voor"}
+        </Button>
         {weekmenu === null ? (
           <p className="text-sm text-muted-foreground">Laden…</p>
         ) : (
@@ -262,6 +330,34 @@ function WeekstartPage() {
                             {kokNaam} kookt
                           </p>
                         )}
+                      </div>
+                    ) : voorstelVoorDag(datum) ? (
+                      <div className="space-y-1.5">
+                        <p className="flex items-center gap-1 text-sm">
+                          <Sparkles className="h-3.5 w-3.5 shrink-0 text-secondary" />
+                          {voorstelVoorDag(datum)!.titel}
+                        </p>
+                        <div className="flex gap-3 text-xs font-medium">
+                          <button
+                            onClick={() => void overnemenVoorstel(voorstelVoorDag(datum)!)}
+                            disabled={bezig}
+                            className="text-secondary hover:underline"
+                          >
+                            Overnemen
+                          </button>
+                          <button
+                            onClick={() => wisselenVoorstel(datum)}
+                            className="text-muted-foreground hover:underline"
+                          >
+                            Wisselen
+                          </button>
+                          <button
+                            onClick={() => afwijzenVoorstel(datum)}
+                            className="text-muted-foreground hover:text-destructive"
+                          >
+                            Afwijzen
+                          </button>
+                        </div>
                       </div>
                     ) : (
                       <button
