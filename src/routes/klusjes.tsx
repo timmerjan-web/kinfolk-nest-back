@@ -201,7 +201,7 @@ function KlusjesPage() {
                     leden={leden}
                     vandaag={vandaag}
                     onToggle={toggle}
-                    onVerwijder={verwijderen}
+                    onVerwijder={setTeVerwijderen}
                   />
                 ))}
               </ul>
@@ -221,7 +221,7 @@ function KlusjesPage() {
                     leden={leden}
                     vandaag={vandaag}
                     onToggle={toggle}
-                    onVerwijder={verwijderen}
+                    onVerwijder={setTeVerwijderen}
                   />
                 ))}
               </ul>
