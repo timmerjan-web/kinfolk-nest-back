@@ -229,6 +229,21 @@ function KlusjesPage() {
           )}
         </>
       )}
+
+      <BevestigDialog
+        open={teVerwijderen !== null}
+        onOpenChange={(open) => {
+          if (!open) setTeVerwijderen(null);
+        }}
+        titel="Klusje verwijderen?"
+        beschrijving={
+          teVerwijderen
+            ? `"${teVerwijderen.titel}" wordt definitief verwijderd. Dit kan niet ongedaan worden gemaakt.`
+            : ""
+        }
+        bezig={bezig}
+        onBevestig={verwijderen}
+      />
     </AppShell>
   );
 }
