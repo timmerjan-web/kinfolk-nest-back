@@ -99,16 +99,70 @@ export function WeekmenuDagForm({
           </select>
         </div>
       )}
-      <div>
+      {recepten.length > 0 && receptId && (
+        <div className="flex items-center justify-between gap-2 rounded-lg bg-primary/10 px-3 py-2">
+          <span className="flex min-w-0 items-center gap-2 text-xs font-medium text-primary">
+            <BookOpen className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">Uit het kookboek</span>
+          </span>
+          <button
+            type="button"
+            onClick={ontkoppelRecept}
+            aria-label="Recept ontkoppelen"
+            className="shrink-0 text-primary/70 hover:text-primary"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
+      <div className="relative">
         <Label htmlFor="titel">Titel</Label>
-        <Input
-          id="titel"
-          required
-          value={titel}
-          onChange={(e) => setTitel(e.target.value)}
-          placeholder="Bv. Pasta met pesto"
-          className="mt-1"
-        />
+        <div className="relative">
+          <Input
+            id="titel"
+            required
+            value={titel}
+            onChange={(e) => {
+              setTitel(e.target.value);
+              setReceptId("");
+              openLijst();
+            }}
+            onFocus={openLijst}
+            onBlur={sluitLijstLater}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") setLijstOpen(false);
+            }}
+            placeholder="Bv. Pasta met pesto"
+            autoComplete="off"
+            className="mt-1 pr-9"
+          />
+          <Search className="pointer-events-none absolute right-3 top-1/2 mt-0.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        </div>
+        {lijstOpen && resultaten.length > 0 && (
+          <ul
+            role="listbox"
+            aria-label="Recepten uit het kookboek"
+            className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-md border border-border bg-popover py-1 shadow-md"
+          >
+            {resultaten.map((r) => (
+              <li key={r.id}>
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={r.id === receptId}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    kiesRecept(r.id);
+                  }}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-accent"
+                >
+                  <BookOpen className="h-3.5 w-3.5 shrink-0 text-secondary" />
+                  <span className="truncate">{r.titel}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
       <div>
         <Label htmlFor="kok">Wie kookt?</Label>
