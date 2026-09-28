@@ -5,6 +5,7 @@ import { AppShell, SectionCard } from "@/components/app-shell";
 import { RequireGezin } from "@/components/require-auth";
 import { useAuth } from "@/lib/auth";
 import { foutTekst } from "@/lib/errors";
+import { maakConceptVanScreenshot } from "@/lib/ocr";
 import { parseRecept } from "@/lib/parseRecept";
 import { createConceptRecept } from "@/lib/recepten";
 
@@ -28,7 +29,7 @@ type GedeeldePayload = { title: string; text: string; url: string };
 function DeelOntvangenPage() {
   const navigate = useNavigate();
   const { profile, user } = useAuth();
-  const [status, setStatus] = useState<"bezig" | "leeg" | "fout">("bezig");
+  const [status, setStatus] = useState<"bezig" | "herkennen" | "leeg" | "fout">("bezig");
 
   useEffect(() => {
     if (!profile?.gezin_id || !user) return;
@@ -42,9 +43,24 @@ function DeelOntvangenPage() {
           if (actief) setStatus("leeg");
           return;
         }
-        const payload = (await response.json()) as GedeeldePayload;
         await cache.delete(CACHE_SLEUTEL);
+        const contentType = response.headers.get("Content-Type") ?? "";
 
+        if (contentType.startsWith("image/")) {
+          if (actief) setStatus("herkennen");
+          const blob = await response.blob();
+          const concept = await maakConceptVanScreenshot(blob, profile.gezin_id!, user.id);
+          if (!actief) return;
+          toast.success("Tekst herkend — controleer het concept.");
+          navigate({
+            to: "/recepten/concepten/$receptId",
+            params: { receptId: concept.id },
+            replace: true,
+          });
+          return;
+        }
+
+        const payload = (await response.json()) as GedeeldePayload;
         const ruweTekst = payload.text || payload.title || "";
         const geparsed = parseRecept(ruweTekst);
         const bronUrl = geparsed.url || payload.url || null;
@@ -64,7 +80,7 @@ function DeelOntvangenPage() {
         });
 
         if (!actief) return;
-        toast.success("Concept aangemaakt vanuit Instagram.");
+        toast.success("Concept aangemaakt.");
         navigate({
           to: "/recepten/concepten/$receptId",
           params: { receptId: concept.id },
@@ -73,7 +89,7 @@ function DeelOntvangenPage() {
       } catch (err) {
         if (actief) {
           setStatus("fout");
-          toast.error(foutTekst(err, "Verwerken van de gedeelde post mislukt."));
+          toast.error(foutTekst(err, "Verwerken van het gedeelde bestand mislukt."));
         }
       }
     })();
@@ -87,8 +103,9 @@ function DeelOntvangenPage() {
     <AppShell title="Delen verwerken" terug="/recepten">
       <SectionCard className="text-center text-sm text-muted-foreground">
         {status === "bezig" && "Bezig met verwerken…"}
+        {status === "herkennen" && "Bezig met tekst herkennen…"}
         {status === "leeg" &&
-          "Geen gedeelde inhoud gevonden. Deel een post opnieuw vanuit Instagram naar de app."}
+          "Geen gedeelde inhoud gevonden. Deel een screenshot opnieuw naar de app."}
         {status === "fout" && "Er ging iets mis bij het verwerken."}
       </SectionCard>
     </AppShell>

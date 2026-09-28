@@ -75,15 +75,16 @@ registerRoute(
   }),
 );
 
-// Web Share Target (manifest.share_target): Android levert de gedeelde
-// Instagram-post af als een POST-navigatie naar /deel-ontvangen. Dat kan
-// geen gewone SPA-route direct afhandelen — enkel de service worker kan
-// een POST onderscheppen. De FormData wordt hier uitgelezen en tijdelijk
-// weggezet in de Cache API (niet IndexedDB: die is binnen een SW-fetch-
-// handler synchroon genoeg beschikbaar en overleeft, net als IndexedDB,
-// een koude start van de PWA). De GET-route /deel-ontvangen (een gewone
-// React-pagina, ingelogd via de al-bestaande browsersessie) haalt de
-// weggezette data meteen weer op en verwijdert ze.
+// Web Share Target (manifest.share_target): een gedeelde screenshot komt
+// binnen als een POST-navigatie naar /deel-ontvangen. Dat kan geen gewone
+// SPA-route direct afhandelen — enkel de service worker kan een POST
+// onderscheppen. De FormData wordt hier uitgelezen en tijdelijk weggezet
+// in de Cache API (niet IndexedDB: die is binnen een SW-fetch-handler
+// synchroon genoeg beschikbaar en overleeft, net als IndexedDB, een koude
+// start van de PWA). De GET-route /deel-ontvangen (een gewone React-
+// pagina, ingelogd via de al-bestaande browsersessie) haalt de weggezette
+// data meteen weer op, verwijdert ze, en draait er (bij een afbeelding)
+// tekstherkenning op.
 const DEEL_ONTVANGEN_CACHE = "deel-ontvangen";
 const DEEL_ONTVANGEN_SLEUTEL = "/deel-ontvangen-payload";
 
@@ -91,18 +92,30 @@ registerRoute(
   ({ url }) => url.pathname.endsWith("/deel-ontvangen"),
   async ({ request }) => {
     const formData = await request.formData();
-    const payload = {
-      title: String(formData.get("title") ?? ""),
-      text: String(formData.get("text") ?? ""),
-      url: String(formData.get("url") ?? ""),
-    };
     const cache = await caches.open(DEEL_ONTVANGEN_CACHE);
-    await cache.put(
-      DEEL_ONTVANGEN_SLEUTEL,
-      new Response(JSON.stringify(payload), {
-        headers: { "Content-Type": "application/json" },
-      }),
-    );
+    const bestand = formData.get("screenshot");
+
+    if (bestand instanceof File && bestand.size > 0) {
+      await cache.put(
+        DEEL_ONTVANGEN_SLEUTEL,
+        new Response(bestand, { headers: { "Content-Type": bestand.type || "image/jpeg" } }),
+      );
+    } else {
+      // Bonus-pad: sommige apps delen wél platte tekst i.p.v. een
+      // afbeelding — die blijft ondersteund, ook al is een screenshot nu
+      // de geadverteerde weg.
+      const payload = {
+        title: String(formData.get("title") ?? ""),
+        text: String(formData.get("text") ?? ""),
+        url: String(formData.get("url") ?? ""),
+      };
+      await cache.put(
+        DEEL_ONTVANGEN_SLEUTEL,
+        new Response(JSON.stringify(payload), {
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+    }
     return Response.redirect(request.url, 303);
   },
   "POST",

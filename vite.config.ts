@@ -44,15 +44,21 @@ export default defineConfig({
             { src: "/icon-512.png", sizes: "512x512", type: "image/png" },
             { src: "/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
           ],
-          // Web Share Target: "delen" vanuit Instagram (of eender welke
-          // andere app) naar deze PWA. De browser doet een POST-navigatie
-          // naar action — enkel de service worker kan die onderscheppen,
-          // zie de registerRoute("POST", …) in src/sw.ts.
+          // Web Share Target: een screenshot van een Instagram-post/story/reel
+          // delen naar deze PWA (uit de Galerij-app of de "Delen"-knop op een
+          // schermafbeelding). De browser doet een POST-navigatie naar action
+          // — enkel de service worker kan die onderscheppen, zie de
+          // registerRoute("POST", …) in src/sw.ts.
           share_target: {
             action: "/deel-ontvangen",
             method: "POST",
             enctype: "multipart/form-data",
-            params: { title: "title", text: "text", url: "url" },
+            params: {
+              title: "title",
+              text: "text",
+              url: "url",
+              files: [{ name: "screenshot", accept: ["image/*"] }],
+            },
           },
         },
       }),

@@ -1,10 +1,12 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type MouseEvent } from "react";
-import { Inbox, Trash2 } from "lucide-react";
+import { ImagePlus, Inbox, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, SectionCard } from "@/components/app-shell";
 import { RequireGezin } from "@/components/require-auth";
+import { useAuth } from "@/lib/auth";
 import { foutTekst } from "@/lib/errors";
+import { maakConceptVanScreenshot } from "@/lib/ocr";
 import { deleteRecept, listConceptRecepten, type Recept } from "@/lib/recepten";
 
 export const Route = createFileRoute("/recepten/concepten/")({
@@ -17,7 +19,10 @@ export const Route = createFileRoute("/recepten/concepten/")({
 });
 
 function ReceptWachtrijPage() {
+  const navigate = useNavigate();
+  const { profile, user } = useAuth();
   const [concepten, setConcepten] = useState<Recept[] | null>(null);
+  const [ocrBezig, setOcrBezig] = useState(false);
 
   useEffect(() => {
     listConceptRecepten()
@@ -36,14 +41,49 @@ function ReceptWachtrijPage() {
     }
   };
 
+  const verwerkScreenshot = async (bestand: File) => {
+    if (!profile?.gezin_id || !user) return;
+    setOcrBezig(true);
+    try {
+      const concept = await maakConceptVanScreenshot(bestand, profile.gezin_id, user.id);
+      toast.success("Tekst herkend — controleer het concept.");
+      navigate({ to: "/recepten/concepten/$receptId", params: { receptId: concept.id } });
+    } catch (err) {
+      toast.error(foutTekst(err, "Tekst herkennen mislukt."));
+    } finally {
+      setOcrBezig(false);
+    }
+  };
+
   return (
     <AppShell title="Concept-wachtrij" subtitle="Gedeeld, nog niet nagekeken" terug="/recepten">
+      <SectionCard className="mb-3">
+        <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-input bg-background px-3 py-4 text-sm font-medium text-foreground hover:bg-muted">
+          <ImagePlus className="h-4 w-4" />
+          {ocrBezig ? "Bezig met tekst herkennen…" : "Screenshot toevoegen"}
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            disabled={ocrBezig}
+            onChange={(e) => {
+              const bestand = e.target.files?.[0];
+              e.target.value = "";
+              if (bestand) void verwerkScreenshot(bestand);
+            }}
+          />
+        </label>
+        <p className="mt-2 text-center text-xs text-muted-foreground">
+          Screenshot van een Instagram-post, story of reel met het recept erbij.
+        </p>
+      </SectionCard>
+
       {concepten === null ? (
         <SectionCard className="text-center text-sm text-muted-foreground">Laden…</SectionCard>
       ) : concepten.length === 0 ? (
         <SectionCard className="flex flex-col items-center gap-2 py-6 text-center text-sm text-muted-foreground">
           <Inbox className="h-8 w-8 opacity-50" />
-          Niets in de wachtrij — deel een post vanuit Instagram om een concept aan te maken.
+          Niets in de wachtrij — voeg hierboven een screenshot toe.
         </SectionCard>
       ) : (
         <ul className="space-y-2">
