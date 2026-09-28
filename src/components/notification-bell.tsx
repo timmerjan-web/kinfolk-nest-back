@@ -80,7 +80,7 @@ export function NotificationBell() {
       <button
         onClick={() => setOpen((o) => !o)}
         aria-label="Meldingen"
-        className="relative flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur"
+        className="relative flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20"
       >
         <Bell className="h-4 w-4" />
         {ongelezen.length > 0 && (

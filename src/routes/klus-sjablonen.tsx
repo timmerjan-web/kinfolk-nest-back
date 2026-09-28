@@ -111,7 +111,7 @@ function KlusSjablonenPage() {
           <button
             onClick={() => setNieuwOpen((o) => !o)}
             aria-label="Klus toevoegen"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20"
           >
             {nieuwOpen ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
           </button>
