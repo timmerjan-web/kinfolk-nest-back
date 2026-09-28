@@ -100,6 +100,20 @@ export async function deleteKlusje(id: string) {
   if (error) throw error;
 }
 
+// Aantal openstaande klusjes van vandaag voor deze gebruiker — voor de
+// badge op de Planning-navigatietab.
+export async function telKlusjesVandaagVoor(userId: string): Promise<number> {
+  const vandaag = toDatumString(new Date());
+  const { count, error } = await supabase
+    .from("klusjes")
+    .select("id", { count: "exact", head: true })
+    .eq("afgerond", false)
+    .eq("toegewezen_aan", userId)
+    .eq("deadline", vandaag);
+  if (error) throw error;
+  return count ?? 0;
+}
+
 // Kent een klusje toe (of maakt het weer onbeheerd) zonder de volledige
 // KlusjeForm te openen — gebruikt door het Weekstart-scherm om dit
 // inline te kunnen doen.

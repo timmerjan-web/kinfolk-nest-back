@@ -1,15 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import {
-  BookOpen,
-  CalendarClock,
-  CalendarRange,
-  Camera,
-  ChefHat,
-  Gift,
-  Heart,
-  ListChecks,
-} from "lucide-react";
+import { CalendarClock, ChefHat, Gift, ListChecks } from "lucide-react";
 import { AppShell, SectionCard } from "@/components/app-shell";
 import { RequireGezin } from "@/components/require-auth";
 import { FotoVanDeDag } from "@/components/foto-van-de-dag";
@@ -254,42 +245,6 @@ function TodayPage() {
       </SectionCard>
 
       <FotoVanDeDag />
-
-      <SectionCard className="mb-3">
-        <div className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Meer
-        </div>
-        <div className="grid grid-cols-4 gap-2">
-          <Link
-            to="/weekstart"
-            className="flex flex-col items-center gap-1 rounded-lg py-3 text-center hover:bg-muted"
-          >
-            <CalendarRange className="h-5 w-5 text-muted-foreground" />
-            <span className="text-[11px]">Weekstart</span>
-          </Link>
-          <Link
-            to="/verlanglijst"
-            className="flex flex-col items-center gap-1 rounded-lg py-3 text-center hover:bg-muted"
-          >
-            <Heart className="h-5 w-5 text-muted-foreground" />
-            <span className="text-[11px]">Verlanglijst</span>
-          </Link>
-          <Link
-            to="/fotos"
-            className="flex flex-col items-center gap-1 rounded-lg py-3 text-center hover:bg-muted"
-          >
-            <Camera className="h-5 w-5 text-muted-foreground" />
-            <span className="text-[11px]">Foto's</span>
-          </Link>
-          <Link
-            to="/klus-sjablonen"
-            className="flex flex-col items-center gap-1 rounded-lg py-3 text-center hover:bg-muted"
-          >
-            <BookOpen className="h-5 w-5 text-muted-foreground" />
-            <span className="text-[11px]">Klussencatalogus</span>
-          </Link>
-        </div>
-      </SectionCard>
 
       <PrikbordPreview />
     </AppShell>

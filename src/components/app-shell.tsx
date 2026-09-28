@@ -1,29 +1,12 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import {
-  Home,
-  ChefHat,
-  CalendarDays,
-  ShoppingCart,
-  ListChecks,
-  CalendarClock,
-  Users,
-  LogOut,
-  ChevronLeft,
-} from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { LogOut, ChevronLeft } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
 import { GezinsappLogo } from "./logo";
 import { NotificationBell } from "./notification-bell";
 import { useAuth } from "@/lib/auth";
-
-const primaryNav = [
-  { to: "/", label: "Vandaag", icon: Home },
-  { to: "/recepten", label: "Recepten", icon: ChefHat },
-  { to: "/weekmenu", label: "Weekmenu", icon: CalendarDays },
-  { to: "/boodschappen", label: "Boodschappen", icon: ShoppingCart },
-  { to: "/klusjes", label: "Klusjes", icon: ListChecks },
-  { to: "/agenda", label: "Agenda", icon: CalendarClock },
-  { to: "/gezin", label: "Gezin", icon: Users },
-] as const;
+import { telKlusjesVandaagVoor } from "@/lib/klusjes";
+import { haalScroll, laatstePad, onthoudLaatstePad, onthoudScroll } from "@/lib/navMemory";
+import { NAV_SECTIES, sectieVoorPad, type NavSectie } from "@/lib/navSecties";
 
 export function AppShell({
   title,
@@ -38,24 +21,62 @@ export function AppShell({
   action?: ReactNode;
   // Route om naartoe te gaan met een terugpijl i.p.v. het logo — voor
   // detailschermen die vanuit een lijst geopend worden. Zonder browserbalk
-  // (geïnstalleerde PWA) is dit de enige weg terug.
+  // (geïnstalleerde PWA) is dit de enige weg terug. Onderdrukt ook de
+  // sub-navbalk: een detailscherm herhaalt de sectietabs niet, het heeft
+  // al een expliciete terugpijl.
   terug?: string;
 }) {
   const { pathname } = useLocation();
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [klusjesVandaag, setKlusjesVandaag] = useState(0);
+
+  const actieveSectie = sectieVoorPad(pathname);
+
+  // Scrollpositie per pad onthouden (bij het verlaten van deze pagina) en
+  // herstellen (bij het opnieuw bezoeken) — en het laatst bezochte pad
+  // binnen de huidige sectie bijhouden voor "laatste tabblad onthouden".
+  useEffect(() => {
+    const y = haalScroll(pathname);
+    if (y > 0) requestAnimationFrame(() => window.scrollTo(0, y));
+    if (actieveSectie) onthoudLaatstePad(actieveSectie.key, pathname);
+    return () => {
+      onthoudScroll(pathname, window.scrollY);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!user) return;
+    telKlusjesVandaagVoor(user.id)
+      .then(setKlusjesVandaag)
+      .catch(() => setKlusjesVandaag(0));
+  }, [user, pathname]);
 
   if (!user) return null;
 
   const initial = profile?.avatar_initial ?? profile?.naam?.[0]?.toUpperCase() ?? "·";
+
+  // NAV_SECTIES komt uit een data-array (niet uit TanStack's statisch
+  // gegenereerde routeboom), dus de paden zijn hier bewust `string` i.p.v.
+  // een letterlijke route-unie. De cast is alleen nodig op de twee
+  // plekken waar zo'n pad echt aan de router doorgegeven wordt.
+  const klikSectie = (sectie: NavSectie) => {
+    if (sectie.key === actieveSectie?.key) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    const doel = laatstePad(sectie.key) ?? sectie.standaardPad;
+    void navigate({ to: doel as never });
+  };
 
   return (
     <div className="min-h-screen bg-background pb-24">
       <header className="safe-top surface-dark">
         <div className="mx-auto max-w-2xl px-5 py-5">
           <div className="flex items-start justify-between gap-3">
-            <Link to={terug ?? "/"} className="flex items-center gap-3 text-white">
+            <Link to={(terug ?? "/") as never} className="flex items-center gap-3 text-white">
               {terug ? (
                 <ChevronLeft className="h-8 w-8 shrink-0" aria-label="Terug" />
               ) : (
@@ -107,23 +128,54 @@ export function AppShell({
         </div>
       </header>
 
+      {!terug && actieveSectie?.subNav && (
+        <div className="border-b border-border bg-background px-4 py-2">
+          <div className="mx-auto flex max-w-2xl gap-2">
+            {actieveSectie.subNav.map((item) => {
+              const actief = item.to === "/" ? pathname === "/" : pathname.startsWith(item.to);
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to as never}
+                  className={`flex min-h-12 items-center rounded-full px-4 text-xs font-semibold transition-colors ${
+                    actief
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <main className="mx-auto max-w-2xl px-4 py-5">{children}</main>
 
       <nav className="surface-dark fixed inset-x-0 bottom-0 z-40 safe-bottom border-t border-white/10 backdrop-blur">
-        <ul className="mx-auto flex max-w-2xl items-stretch justify-between px-1">
-          {primaryNav.map(({ to, label, icon: Icon }) => {
-            const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
+        <ul className="mx-auto flex max-w-2xl items-stretch justify-between gap-1 px-2">
+          {NAV_SECTIES.map((sectie) => {
+            const actief = sectie.key === actieveSectie?.key;
+            const Icon = sectie.icon;
             return (
-              <li key={to} className="flex-1">
-                <Link
-                  to={to}
-                  className={`flex flex-col items-center gap-0.5 px-1 py-2 text-[10px] font-medium transition-colors ${
-                    active ? "text-primary" : "text-white/70 hover:text-white"
+              <li key={sectie.key} className="flex-1">
+                <button
+                  onClick={() => klikSectie(sectie)}
+                  className={`relative flex min-h-12 w-full flex-col items-center justify-center gap-0.5 px-1 py-2 text-[10px] font-medium transition-colors ${
+                    actief ? "text-primary" : "text-white/70 hover:text-white"
                   }`}
                 >
-                  <Icon className={`h-5 w-5 ${active ? "scale-110" : ""} transition-transform`} />
-                  <span>{label}</span>
-                </Link>
+                  <span className="relative">
+                    <Icon className={`h-5 w-5 ${actief ? "scale-110" : ""} transition-transform`} />
+                    {sectie.key === "planning" && klusjesVandaag > 0 && (
+                      <span className="absolute -right-2 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold leading-none text-destructive-foreground">
+                        {klusjesVandaag > 9 ? "9+" : klusjesVandaag}
+                      </span>
+                    )}
+                  </span>
+                  <span>{sectie.label}</span>
+                </button>
               </li>
             );
           })}

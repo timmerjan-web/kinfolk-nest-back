@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { Copy, Gift, Pencil, UserPlus } from "lucide-react";
+import { BookOpen, Camera, Copy, Gift, Heart, Pencil, StickyNote, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, SectionCard } from "@/components/app-shell";
 import { RequireGezin } from "@/components/require-auth";
@@ -107,13 +107,45 @@ function GezinPage() {
 
   return (
     <AppShell title="Gezin" subtitle={gezinNaam || undefined}>
-      <Link
-        to="/verlanglijst"
-        className="mb-3 flex items-center gap-2 rounded-xl border border-border bg-card p-3 text-sm shadow-card hover:bg-muted"
-      >
-        <Gift className="h-4 w-4 text-muted-foreground" />
-        Verlanglijstjes bekijken
-      </Link>
+      <SectionCard className="mb-3">
+        <div className="grid grid-cols-3 gap-2">
+          <Link
+            to="/verlanglijst"
+            className="flex min-h-12 flex-col items-center gap-1 rounded-lg py-3 text-center hover:bg-muted"
+          >
+            <Heart className="h-5 w-5 text-muted-foreground" />
+            <span className="text-[11px]">Verlanglijst</span>
+          </Link>
+          <Link
+            to="/verjaardagen"
+            className="flex min-h-12 flex-col items-center gap-1 rounded-lg py-3 text-center hover:bg-muted"
+          >
+            <Gift className="h-5 w-5 text-muted-foreground" />
+            <span className="text-[11px]">Verjaardagen</span>
+          </Link>
+          <Link
+            to="/fotos"
+            className="flex min-h-12 flex-col items-center gap-1 rounded-lg py-3 text-center hover:bg-muted"
+          >
+            <Camera className="h-5 w-5 text-muted-foreground" />
+            <span className="text-[11px]">Foto's</span>
+          </Link>
+          <Link
+            to="/prikbord"
+            className="flex min-h-12 flex-col items-center gap-1 rounded-lg py-3 text-center hover:bg-muted"
+          >
+            <StickyNote className="h-5 w-5 text-muted-foreground" />
+            <span className="text-[11px]">Prikbord</span>
+          </Link>
+          <Link
+            to="/klus-sjablonen"
+            className="flex min-h-12 flex-col items-center gap-1 rounded-lg py-3 text-center hover:bg-muted"
+          >
+            <BookOpen className="h-5 w-5 text-muted-foreground" />
+            <span className="text-[11px]">Klussencatalogus</span>
+          </Link>
+        </div>
+      </SectionCard>
 
       <SectionCard className="mb-3">
         <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
