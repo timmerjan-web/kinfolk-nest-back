@@ -2,31 +2,16 @@
 // Edge Functions: hoe je bij data.stad.gent komt, en hoe je een ruwe
 // API-rij omzet naar { datum, ronde, fractie }.
 //
-// ⚠️ ONGEVERIFIEERD — dit is opgebouwd zonder toegang tot
-// data.stad.gent (netwerk-egress was geblokkeerd in de sandbox waarin
-// dit geschreven is). De aannames hieronder zijn gebaseerd op de
-// gangbare Opendatasoft v2-conventie, niet op een echte call. Voordat
-// dit iets zinnigs doet, moet iemand met internettoegang (bv. Lovable):
-//
-//   1. https://data.stad.gent/api/v2/catalog/datasets/<dataset-id>/records?limit=3
-//      opvragen en de veldnamen vergelijken met IVAGO_VELD_* hieronder.
-//   2. Controleren of één rij één (datum, ronde, fractie) is
-//      ("lang formaat", de huidige aanname in ruweRijNaarRecord) of
-//      één (datum, ronde) met meerdere fractie-kolommen ernaast
-//      ("breed formaat") — pas in dat laatste geval alleen
-//      ruweRijNaarRecords() hieronder aan, de rest van de pijplijn
-//      (ivago-refresh, ivago-melden, de database) hoeft niet te
-//      veranderen.
-//   3. De ivago-ronde-matchen-functie draaien (zie dat bestand) om de
-//      rondecode voor het eerste gezin te bepalen.
-//
-// Bevestig ook de exports/json-respons: dit bestand gaat ervan uit dat
-// die een kale JSON-array van objecten teruggeeft (de gangbare
-// Opendatasoft-vorm), zonder envelope zoals { results: [...] }.
+// ✅ GEVERIFIEERD tegen de echte API (2026-09-28): exports/json geeft
+// een kale JSON-array van platte rijen, één rij per (straat, datum) met
+// velden o.a. straatnaam, kalender (de rondecode, bv. "C1A"), datum
+// ("2026-07-28") en fracties (kommagescheiden tekst, bv. "GFT, PMD").
+// Grofvuil staat er gewoon bij in de fracties-lijst en wordt hieronder
+// weggefilterd.
 
 export const IVAGO_VELD_DATUM = "datum";
-export const IVAGO_VELD_RONDE = "ronde";
-export const IVAGO_VELD_FRACTIE = "fractie";
+export const IVAGO_VELD_RONDE = "kalender";
+export const IVAGO_VELD_FRACTIE = "fracties";
 
 // Fracties die uitdrukkelijk NIET meetellen voor de patroonmatching en
 // de dagelijkse melding (grofvuil valt op wisselende, aparte dagen).
@@ -43,20 +28,21 @@ function genormaliseerdeFractie(waarde: string): string {
   return waarde.trim().toLowerCase();
 }
 
-// Eén ruwe API-rij naar één of meer records. Bij het "lange formaat"
-// (huidige aanname) is dat er precies één; bij een eventueel "breed
-// formaat" zou dit meerdere fractie-kolommen naast elkaar moeten lezen
-// (zie de opmerking bovenaan dit bestand).
+// Eén ruwe API-rij naar één of meer records: de "fracties"-tekst
+// (bv. "GFT, GROFVUIL, PAPIER, PMD") wordt gesplitst op komma's tot
+// aparte records, grofvuil eruit gefilterd.
 export function ruweRijNaarRecords(rij: Record<string, unknown>): IvagoRecord[] {
   const datum = rij[IVAGO_VELD_DATUM];
   const ronde = rij[IVAGO_VELD_RONDE];
-  const fractie = rij[IVAGO_VELD_FRACTIE];
-  if (typeof datum !== "string" || typeof ronde !== "string" || typeof fractie !== "string") {
+  const fracties = rij[IVAGO_VELD_FRACTIE];
+  if (typeof datum !== "string" || typeof ronde !== "string" || typeof fracties !== "string") {
     return [];
   }
-  const fractieNorm = genormaliseerdeFractie(fractie);
-  if (GENEGEERDE_FRACTIES.has(fractieNorm)) return [];
-  return [{ datum: datum.slice(0, 10), ronde, fractie: fractieNorm }];
+  return fracties
+    .split(",")
+    .map(genormaliseerdeFractie)
+    .filter((f) => f.length > 0 && !GENEGEERDE_FRACTIES.has(f))
+    .map((fractie) => ({ datum: datum.slice(0, 10), ronde, fractie }));
 }
 
 export function bouwExportsUrl(datasetId: string): string {
