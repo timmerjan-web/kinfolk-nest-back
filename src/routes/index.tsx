@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { CalendarClock, ChefHat, Gift, ListChecks } from "lucide-react";
+import { CalendarClock, ChefHat, Gift, ListChecks, Trash2 } from "lucide-react";
 import { AppShell, SectionCard } from "@/components/app-shell";
 import { RequireGezin } from "@/components/require-auth";
 import { FotoVanDeDag } from "@/components/foto-van-de-dag";
@@ -13,6 +13,7 @@ import { type Klusje } from "@/lib/klusjes";
 import { dagenTotVerjaardag, formatteerVerjaardag } from "@/lib/verjaardagen";
 import { listVerjaardagen, type VerjaardagContact } from "@/lib/verjaardagenContacten";
 import { haalExterneAfspraken, type ExterneAgendaResultaat } from "@/lib/externeAgenda";
+import { haalIvagoRonde, volgendeOphaling, type WasteCollection } from "@/lib/ivago";
 
 type EerstkomendItem = {
   key: string;
@@ -49,6 +50,8 @@ function TodayPage() {
   const [contacten, setContacten] = useState<VerjaardagContact[]>([]);
   const [afsprakenAankomend, setAfsprakenAankomend] = useState<AgendaItem[] | null>(null);
   const [externeResultaten, setExterneResultaten] = useState<ExterneAgendaResultaat[] | null>(null);
+  const [ivagoRonde, setIvagoRonde] = useState<string | null>(null);
+  const [ophaling, setOphaling] = useState<WasteCollection | null | undefined>(undefined);
   const morgenStr = toDatumString(addDays(vandaag, 1));
 
   useEffect(() => {
@@ -95,6 +98,22 @@ function TodayPage() {
       .then(setContacten)
       .catch(() => setContacten([]));
   }, []);
+
+  // Leeg ivago_ronde = de functie is stil uit: geen fetch, geen kaart,
+  // geen foutmelding.
+  useEffect(() => {
+    if (!profile?.gezin_id) return;
+    haalIvagoRonde(profile.gezin_id)
+      .then(setIvagoRonde)
+      .catch(() => setIvagoRonde(null));
+  }, [profile?.gezin_id]);
+
+  useEffect(() => {
+    if (!ivagoRonde) return;
+    volgendeOphaling(ivagoRonde)
+      .then(setOphaling)
+      .catch(() => setOphaling(null));
+  }, [ivagoRonde]);
 
   const eerstkomend = useMemo(() => {
     const nu = new Date();
@@ -189,6 +208,26 @@ function TodayPage() {
           </Link>
         )}
       </SectionCard>
+
+      {ivagoRonde && (
+        <SectionCard className="mb-3">
+          <div className="mb-1 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <Trash2 className="h-4 w-4" /> Afvalophaling
+          </div>
+          {ophaling === undefined ? (
+            <p className="text-sm text-muted-foreground">Laden…</p>
+          ) : ophaling === null ? (
+            <p className="text-sm text-muted-foreground">Geen ophaling gevonden in de kalender.</p>
+          ) : (
+            <p className="text-sm">
+              <span className="font-mono text-xs text-muted-foreground">
+                {dagLabel(ophaling.datum, vandaagStr, morgenStr)}
+              </span>{" "}
+              {ophaling.fracties.join(", ")}
+            </p>
+          )}
+        </SectionCard>
+      )}
 
       <SectionCard className="mb-3">
         <div className="mb-1 flex items-center justify-between">

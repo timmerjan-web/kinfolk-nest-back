@@ -12,6 +12,17 @@ import { maakUitnodigingAan } from "@/lib/household";
 import { supabase } from "@/integrations/supabase/client";
 import { foutTekst } from "@/lib/errors";
 import { formatteerVerjaardag } from "@/lib/verjaardagen";
+import {
+  haalIvagoRonde,
+  haalKalenderStatus,
+  zetIvagoRonde,
+  type WasteCalendarStatus,
+} from "@/lib/ivago";
+
+// Waarschuwen als de laatste geslaagde verversing langer dan dit
+// geleden is — de achtergrondtaak draait wekelijks, dus dit geeft
+// ruim speling voor een gemiste run voordat de gebruiker het ziet.
+const KALENDER_WAARSCHUWING_DAGEN = 10;
 
 export const Route = createFileRoute("/gezin")({
   head: () => ({ meta: [{ title: "Gezin — Gezinsapp" }] }),
@@ -35,6 +46,10 @@ function GezinPage() {
   const [eigenNaam, setEigenNaam] = useState("");
   const [naamOpslaanBezig, setNaamOpslaanBezig] = useState(false);
   const [bewerken, setBewerken] = useState(false);
+  const [ivagoRonde, setIvagoRonde] = useState<string | null>(null);
+  const [ivagoInvoer, setIvagoInvoer] = useState("");
+  const [ivagoBezig, setIvagoBezig] = useState(false);
+  const [ivagoStatus, setIvagoStatus] = useState<WasteCalendarStatus | null>(null);
 
   const laadGezin = useCallback(async () => {
     if (!profile?.gezin_id) return;
@@ -59,6 +74,34 @@ function GezinPage() {
     setEigenGeboortedatum(eigen?.geboortedatum ?? "");
     setEigenNaam(eigen?.naam ?? "");
   }, [leden, user?.id]);
+
+  useEffect(() => {
+    if (!profile?.gezin_id) return;
+    haalIvagoRonde(profile.gezin_id)
+      .then((ronde) => {
+        setIvagoRonde(ronde);
+        setIvagoInvoer(ronde ?? "");
+      })
+      .catch(() => {});
+    haalKalenderStatus()
+      .then(setIvagoStatus)
+      .catch(() => {});
+  }, [profile?.gezin_id]);
+
+  const opslaanIvagoRonde = async () => {
+    if (!profile?.gezin_id) return;
+    setIvagoBezig(true);
+    try {
+      const nieuw = ivagoInvoer.trim() || null;
+      await zetIvagoRonde(profile.gezin_id, nieuw);
+      setIvagoRonde(nieuw);
+      toast.success(nieuw ? "Ophaalronde opgeslagen." : "Ophaalronde gewist.");
+    } catch (err) {
+      toast.error(foutTekst(err, "Opslaan mislukt."));
+    } finally {
+      setIvagoBezig(false);
+    }
+  };
 
   const opslaanEigenGegevens = async () => {
     if (!user || !eigenNaam.trim()) return;
@@ -104,6 +147,11 @@ function GezinPage() {
   };
 
   const isOuder = profile?.rol === "ouder";
+  const kalenderVerouderd =
+    !!ivagoRonde &&
+    (!ivagoStatus?.laatst_gelukt_op ||
+      Date.now() - new Date(ivagoStatus.laatst_gelukt_op).getTime() >
+        KALENDER_WAARSCHUWING_DAGEN * 24 * 60 * 60 * 1000);
 
   return (
     <AppShell title="Gezin" subtitle={gezinNaam || undefined}>
@@ -222,6 +270,53 @@ function GezinPage() {
 
       <SectionCard className="mb-3">
         <PushInstellingen />
+      </SectionCard>
+
+      <SectionCard className="mb-3">
+        <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Afvalophaalkalender (IVAGO)
+        </h2>
+        {isOuder ? (
+          <>
+            <p className="mb-2 text-xs text-muted-foreground">
+              Code van jullie IVAGO-ophaalronde (bv. "Z1B"). Leeg laten zet de hele functie uit —
+              geen meldingen, geen weergave van ophaaldagen.
+            </p>
+            <div className="flex gap-2">
+              <Input
+                value={ivagoInvoer}
+                onChange={(e) => setIvagoInvoer(e.target.value)}
+                placeholder="Bv. Z1B"
+                className="flex-1"
+              />
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={ivagoBezig || ivagoInvoer.trim() === (ivagoRonde ?? "")}
+                onClick={() => void opslaanIvagoRonde()}
+              >
+                {ivagoBezig ? "Bezig…" : "Opslaan"}
+              </Button>
+            </div>
+          </>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            {ivagoRonde
+              ? `Ingestelde ophaalronde: ${ivagoRonde}`
+              : "Nog geen ophaalronde ingesteld."}
+          </p>
+        )}
+        {ivagoRonde && (
+          <p
+            className={`mt-2 text-[11px] ${kalenderVerouderd ? "font-medium text-destructive" : "text-muted-foreground"}`}
+          >
+            {ivagoStatus?.laatst_gelukt_op
+              ? `Kalender laatst bijgewerkt: ${new Date(ivagoStatus.laatst_gelukt_op).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })}`
+              : "Kalender nog niet bijgewerkt."}
+            {kalenderVerouderd &&
+              " — dit is langer geleden dan verwacht, controleer de instelling."}
+          </p>
+        )}
       </SectionCard>
 
       {isOuder ? (

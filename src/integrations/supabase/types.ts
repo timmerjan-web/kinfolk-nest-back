@@ -224,16 +224,19 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          ivago_ronde: string | null
           naam: string
         }
         Insert: {
           created_at?: string
           id?: string
+          ivago_ronde?: string | null
           naam: string
         }
         Update: {
           created_at?: string
           id?: string
+          ivago_ronde?: string | null
           naam?: string
         }
         Relationships: []
@@ -752,6 +755,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      waste_calendar_status: {
+        Row: {
+          dataset_id: string
+          laatst_gelukt_op: string | null
+          laatste_fout: string | null
+          laatste_poging_op: string
+        }
+        Insert: {
+          dataset_id: string
+          laatst_gelukt_op?: string | null
+          laatste_fout?: string | null
+          laatste_poging_op?: string
+        }
+        Update: {
+          dataset_id?: string
+          laatst_gelukt_op?: string | null
+          laatste_fout?: string | null
+          laatste_poging_op?: string
+        }
+        Relationships: []
+      }
+      waste_collections: {
+        Row: {
+          bijgewerkt_op: string
+          datum: string
+          fracties: string[]
+          gemeld_op: string | null
+          id: string
+          ronde: string
+        }
+        Insert: {
+          bijgewerkt_op?: string
+          datum: string
+          fracties: string[]
+          gemeld_op?: string | null
+          id?: string
+          ronde: string
+        }
+        Update: {
+          bijgewerkt_op?: string
+          datum?: string
+          fracties?: string[]
+          gemeld_op?: string | null
+          id?: string
+          ronde?: string
+        }
+        Relationships: []
       }
       weekmenu_items: {
         Row: {
