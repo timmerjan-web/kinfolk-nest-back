@@ -25,14 +25,24 @@ type EerstkomendItem = {
 };
 
 export const Route = createFileRoute("/")({
-  head: () => ({ meta: [
-    { title: "Vandaag — Gezinsapp" },
-    { name: "description", content: "Bekijk de klusjes, maaltijden, afspraken en herinneringen van vandaag in Gezinsapp." },
-    { property: "og:title", content: "Vandaag — Gezinsapp" },
-    { property: "og:description", content: "Bekijk de klusjes, maaltijden, afspraken en herinneringen van vandaag in Gezinsapp." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary_large_image" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Vandaag — Gezinsapp" },
+      {
+        name: "description",
+        content:
+          "Bekijk de klusjes, maaltijden, afspraken en herinneringen van vandaag in Gezinsapp.",
+      },
+      { property: "og:title", content: "Vandaag — Gezinsapp" },
+      {
+        property: "og:description",
+        content:
+          "Bekijk de klusjes, maaltijden, afspraken en herinneringen van vandaag in Gezinsapp.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: () => (
     <RequireGezin>
       <TodayPage />
