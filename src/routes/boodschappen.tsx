@@ -8,11 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth";
 import { foutTekst } from "@/lib/errors";
+import { toastOngedaanMaken } from "@/lib/ongedaanMaken";
 import { kapitaliseer } from "@/lib/tekst";
 import {
   addItem,
   deleteItem,
   genereerVanWeekmenu,
+  herstelItem,
   listBoodschappen,
   toggleAfgevinkt,
   verwijderAfgevinkt,
@@ -61,18 +63,25 @@ function BoodschappenPage() {
     }
   };
 
-  const toggle = async (item: BoodschappenItem) => {
-    const nieuw = !item.afgevinkt;
-    setItems((huidig) =>
-      (huidig ?? []).map((i) => (i.id === item.id ? { ...i, afgevinkt: nieuw } : i)),
-    );
+  const zetAfgevinkt = async (item: BoodschappenItem, afgevinkt: boolean) => {
+    setItems((huidig) => (huidig ?? []).map((i) => (i.id === item.id ? { ...i, afgevinkt } : i)));
     try {
-      await toggleAfgevinkt(item.id, nieuw);
+      await toggleAfgevinkt(item.id, afgevinkt);
     } catch (err) {
       toast.error(foutTekst(err, "Bijwerken mislukt."));
       setItems((huidig) =>
-        (huidig ?? []).map((i) => (i.id === item.id ? { ...i, afgevinkt: !nieuw } : i)),
+        (huidig ?? []).map((i) => (i.id === item.id ? { ...i, afgevinkt: !afgevinkt } : i)),
       );
+    }
+  };
+
+  // Undo aanbieden bij het afvinken; "weer open zetten" is zelf al de
+  // undo-actie en hoeft dus geen eigen undo-toast te krijgen.
+  const toggle = async (item: BoodschappenItem) => {
+    const nieuw = !item.afgevinkt;
+    await zetAfgevinkt(item, nieuw);
+    if (nieuw) {
+      toastOngedaanMaken(`"${item.naam}" afgevinkt.`, () => zetAfgevinkt(item, false));
     }
   };
 
@@ -80,6 +89,14 @@ function BoodschappenPage() {
     setItems((huidig) => (huidig ?? []).filter((i) => i.id !== item.id));
     try {
       await deleteItem(item.id);
+      toastOngedaanMaken(`"${item.naam}" verwijderd.`, async () => {
+        try {
+          await herstelItem(item);
+          setItems((huidig) => [...(huidig ?? []), item]);
+        } catch (err) {
+          toast.error(foutTekst(err, "Herstellen mislukt."));
+        }
+      });
     } catch (err) {
       toast.error(foutTekst(err, "Verwijderen mislukt."));
       laad();

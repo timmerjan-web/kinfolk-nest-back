@@ -80,6 +80,15 @@ export async function deletePrikbordItem(item: PrikbordItem) {
   if (error) throw error;
 }
 
+// Zet een verwijderde notitie terug — gebruikt door de "Ongedaan
+// maken"-actie op de undo-toast. Een eventuele foto is bij het
+// verwijderen al definitief uit Storage verdwenen en komt niet terug;
+// de tekst/tags wel.
+export async function herstelPrikbordItem(item: PrikbordItem) {
+  const { error } = await supabase.from("prikbord_items").insert({ ...item, storage_pad: null });
+  if (error) throw error;
+}
+
 export async function signedUrl(pad: string): Promise<string | null> {
   const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(pad, 60 * 60);
   if (error) return null;

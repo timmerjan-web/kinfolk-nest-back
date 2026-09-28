@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { AppShell, SectionCard } from "@/components/app-shell";
 import { RequireGezin } from "@/components/require-auth";
 import { AgendaForm } from "@/components/agenda-form";
+import { BevestigDialog } from "@/components/bevestig-dialog";
 import { PersoonBadge } from "@/components/persoon-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,6 +63,10 @@ function AgendaPage() {
   const [icalLabel, setIcalLabel] = useState("");
   const [koppelBezig, setKoppelBezig] = useState(false);
   const [koppelenOpen, setKoppelenOpen] = useState(false);
+  const [teVerwijderen, setTeVerwijderen] = useState<AgendaItem | null>(null);
+  const [verwijderBezig, setVerwijderBezig] = useState(false);
+  const [teOntkoppelen, setTeOntkoppelen] = useState<AgendaKoppeling | null>(null);
+  const [ontkoppelBezig, setOntkoppelBezig] = useState(false);
 
   const laad = useCallback(() => {
     listAgenda()
@@ -119,12 +124,19 @@ function AgendaPage() {
     }
   };
 
-  const ontkoppelen = async (koppeling: AgendaKoppeling) => {
-    setKoppelingen((huidig) => huidig.filter((k) => k.id !== koppeling.id));
+  const ontkoppelen = async () => {
+    if (!teOntkoppelen) return;
+    const koppeling = teOntkoppelen;
+    setOntkoppelBezig(true);
     try {
       await ontkoppelAgenda(koppeling.id);
+      setKoppelingen((huidig) => huidig.filter((k) => k.id !== koppeling.id));
+      setTeOntkoppelen(null);
+      toast.success("Ontkoppeld.");
     } catch (err) {
       toast.error(foutTekst(err, "Ontkoppelen mislukt."));
+    } finally {
+      setOntkoppelBezig(false);
     }
   };
 
@@ -146,13 +158,18 @@ function AgendaPage() {
     }
   };
 
-  const verwijderen = async (item: AgendaItem) => {
-    setItems((huidig) => (huidig ?? []).filter((i) => i.id !== item.id));
+  const verwijderen = async () => {
+    if (!teVerwijderen) return;
+    const item = teVerwijderen;
+    setVerwijderBezig(true);
     try {
       await deleteAgendaItem(item.id);
+      setItems((huidig) => (huidig ?? []).filter((i) => i.id !== item.id));
+      setTeVerwijderen(null);
     } catch (err) {
       toast.error(foutTekst(err, "Verwijderen mislukt."));
-      laad();
+    } finally {
+      setVerwijderBezig(false);
     }
   };
 
@@ -237,7 +254,7 @@ function AgendaPage() {
                       key={wi.item.id}
                       item={wi.item}
                       leden={leden}
-                      onVerwijder={verwijderen}
+                      onVerwijder={setTeVerwijderen}
                     />
                   ) : (
                     <ExternRij key={`extern-${datum}-${i}`} afspraak={wi.afspraak} />
@@ -265,7 +282,7 @@ function AgendaPage() {
                     key={wi.item.id}
                     item={wi.item}
                     leden={leden}
-                    onVerwijder={verwijderen}
+                    onVerwijder={setTeVerwijderen}
                     verleden
                   />
                 )),
@@ -297,7 +314,7 @@ function AgendaPage() {
                   <li key={k.id} className="flex items-center justify-between text-sm">
                     <span>{k.label || "Mijn agenda"}</span>
                     <button
-                      onClick={() => void ontkoppelen(k)}
+                      onClick={() => setTeOntkoppelen(k)}
                       aria-label="Ontkoppelen"
                       className="text-muted-foreground hover:text-destructive"
                     >
@@ -341,6 +358,26 @@ function AgendaPage() {
           </div>
         )}
       </SectionCard>
+
+      <BevestigDialog
+        open={teVerwijderen !== null}
+        onOpenChange={(open) => !open && setTeVerwijderen(null)}
+        titel={`Afspraak "${teVerwijderen?.titel}" verwijderen?`}
+        beschrijving="Dit kan niet ongedaan gemaakt worden."
+        bevestigLabel="Verwijderen"
+        bezig={verwijderBezig}
+        onBevestig={verwijderen}
+      />
+
+      <BevestigDialog
+        open={teOntkoppelen !== null}
+        onOpenChange={(open) => !open && setTeOntkoppelen(null)}
+        titel={`Agenda "${teOntkoppelen?.label || "Mijn agenda"}" ontkoppelen?`}
+        beschrijving="Je ziet de afspraken uit deze agenda dan niet meer in de app. Er verandert niets aan de agenda zelf."
+        bevestigLabel="Ontkoppelen"
+        bezig={ontkoppelBezig}
+        onBevestig={ontkoppelen}
+      />
     </AppShell>
   );
 }

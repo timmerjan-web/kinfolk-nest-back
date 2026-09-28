@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Cake, Pencil, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, SectionCard } from "@/components/app-shell";
+import { BevestigDialog } from "@/components/bevestig-dialog";
 import { RequireGezin } from "@/components/require-auth";
 import { VerjaardagForm } from "@/components/verjaardag-form";
 import { useAuth } from "@/lib/auth";
@@ -43,6 +44,8 @@ function VerjaardagenPage() {
   const [nieuwOpen, setNieuwOpen] = useState(false);
   const [bewerkKey, setBewerkKey] = useState<string | null>(null);
   const [bezig, setBezig] = useState(false);
+  const [teVerwijderen, setTeVerwijderen] = useState<VerjaardagContact | null>(null);
+  const [verwijderBezig, setVerwijderBezig] = useState(false);
 
   const laadContacten = useCallback(() => {
     listVerjaardagen()
@@ -92,13 +95,18 @@ function VerjaardagenPage() {
     }
   };
 
-  const verwijderen = async (contact: VerjaardagContact) => {
-    setContacten((huidig) => (huidig ?? []).filter((c) => c.id !== contact.id));
+  const verwijderen = async () => {
+    if (!teVerwijderen) return;
+    const contact = teVerwijderen;
+    setVerwijderBezig(true);
     try {
       await deleteVerjaardag(contact.id);
+      setContacten((huidig) => (huidig ?? []).filter((c) => c.id !== contact.id));
+      setTeVerwijderen(null);
     } catch (err) {
       toast.error(foutTekst(err, "Verwijderen mislukt."));
-      laadContacten();
+    } finally {
+      setVerwijderBezig(false);
     }
   };
 
@@ -198,7 +206,7 @@ function VerjaardagenPage() {
                         <Pencil className="h-3.5 w-3.5" />
                       </button>
                       <button
-                        onClick={() => void verwijderen(rij.contact!)}
+                        onClick={() => setTeVerwijderen(rij.contact)}
                         aria-label="Verwijderen"
                         className="text-muted-foreground hover:text-destructive"
                       >
@@ -212,6 +220,16 @@ function VerjaardagenPage() {
           </ul>
         </SectionCard>
       )}
+
+      <BevestigDialog
+        open={teVerwijderen !== null}
+        onOpenChange={(open) => !open && setTeVerwijderen(null)}
+        titel={`Verjaardag van "${teVerwijderen?.naam}" verwijderen?`}
+        beschrijving="Dit kan niet ongedaan gemaakt worden."
+        bevestigLabel="Verwijderen"
+        bezig={verwijderBezig}
+        onBevestig={verwijderen}
+      />
     </AppShell>
   );
 }

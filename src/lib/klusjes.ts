@@ -100,6 +100,20 @@ export async function deleteKlusje(id: string) {
   if (error) throw error;
 }
 
+// Aantal nog openstaande ingeplande klusjes die aan dit catalogus-sjabloon
+// hangen — voor de waarschuwing bij het verwijderen van een sjabloon
+// (sjabloon_id gaat bij verwijderen op null, de klusjes zelf blijven
+// bestaan — zie de FK: "on delete set null").
+export async function telKlusjesVoorSjabloon(sjabloonId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from("klusjes")
+    .select("id", { count: "exact", head: true })
+    .eq("sjabloon_id", sjabloonId)
+    .eq("afgerond", false);
+  if (error) throw error;
+  return count ?? 0;
+}
+
 // Aantal openstaande klusjes van vandaag voor deze gebruiker — voor de
 // badge op de Planning-navigatietab.
 export async function telKlusjesVandaagVoor(userId: string): Promise<number> {

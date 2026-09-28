@@ -9,10 +9,12 @@ import { PersoonBadge } from "@/components/persoon-badge";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { foutTekst } from "@/lib/errors";
+import { toastOngedaanMaken } from "@/lib/ongedaanMaken";
 import {
   addDays,
   createDag,
   deleteDag,
+  herstelDag,
   isVandaag,
   listWeek,
   startOfWeek,
@@ -100,7 +102,14 @@ function WeekmenuPage() {
       await deleteDag(item.id);
       setItems((huidig) => (huidig ?? []).filter((i) => i.id !== item.id));
       setBewerkDatum(null);
-      toast.success("Verwijderd.");
+      toastOngedaanMaken(`"${item.titel}" uit het weekmenu gehaald.`, async () => {
+        try {
+          await herstelDag(item);
+          setItems((huidig) => [...(huidig ?? []), item]);
+        } catch (err) {
+          toast.error(foutTekst(err, "Herstellen mislukt."));
+        }
+      });
     } catch (err) {
       toast.error(foutTekst(err, "Verwijderen mislukt."));
     } finally {

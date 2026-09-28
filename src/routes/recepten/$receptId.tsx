@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, SectionCard } from "@/components/app-shell";
+import { BevestigDialog } from "@/components/bevestig-dialog";
 import { RequireGezin } from "@/components/require-auth";
 import { ReceptForm } from "@/components/recept-form";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ import {
   categorieLabel,
   deleteRecept,
   getRecept,
+  telToekomstigWeekmenuGebruik,
   updateRecept,
   type Recept,
   type ReceptInvoer,
@@ -45,6 +47,8 @@ function ReceptDetailPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [aangevinkt, setAangevinkt] = useState<Set<number>>(new Set());
   const [toevoegenBezig, setToevoegenBezig] = useState(false);
+  const [verwijderDialoogOpen, setVerwijderDialoogOpen] = useState(false);
+  const [toekomstigGebruik, setToekomstigGebruik] = useState<number | null>(null);
 
   useEffect(() => {
     getRecept(receptId)
@@ -70,9 +74,19 @@ function ReceptDetailPage() {
     }
   };
 
+  const openVerwijderDialoog = async () => {
+    if (!recept) return;
+    setToekomstigGebruik(null);
+    setVerwijderDialoogOpen(true);
+    try {
+      setToekomstigGebruik(await telToekomstigWeekmenuGebruik(recept.id));
+    } catch {
+      setToekomstigGebruik(0);
+    }
+  };
+
   const verwijderen = async () => {
     if (!recept) return;
-    if (!window.confirm(`"${recept.titel}" verwijderen?`)) return;
     setBezig(true);
     try {
       await deleteRecept(recept.id);
@@ -81,6 +95,7 @@ function ReceptDetailPage() {
     } catch (err) {
       toast.error(foutTekst(err, "Recept verwijderen mislukt."));
       setBezig(false);
+      setVerwijderDialoogOpen(false);
     }
   };
 
@@ -156,7 +171,7 @@ function ReceptDetailPage() {
             >
               <MoreVertical className="h-4 w-4" />
             </button>
-            {menuOpen && (
+            {menuOpen && profile?.rol === "ouder" && (
               <div
                 className="surface-light absolute right-0 top-full z-50 mt-2 w-44 rounded-xl border border-border bg-card p-2 text-sm text-card-foreground shadow-elevated"
                 onMouseLeave={() => setMenuOpen(false)}
@@ -164,7 +179,7 @@ function ReceptDetailPage() {
                 <button
                   onClick={() => {
                     setMenuOpen(false);
-                    void verwijderen();
+                    void openVerwijderDialoog();
                   }}
                   disabled={bezig}
                   className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-destructive hover:bg-muted disabled:opacity-50"
@@ -300,6 +315,23 @@ function ReceptDetailPage() {
           </Button>
         </SectionCard>
       )}
+
+      <BevestigDialog
+        open={verwijderDialoogOpen}
+        onOpenChange={setVerwijderDialoogOpen}
+        titel={`Recept "${recept.titel}" verwijderen?`}
+        beschrijving={
+          <>
+            Ingrediënten en bereidingswijze gaan mee verloren.
+            {toekomstigGebruik !== null && toekomstigGebruik > 0 && (
+              <> Dit recept staat nog {toekomstigGebruik} keer in het (toekomstige) weekmenu.</>
+            )}
+          </>
+        }
+        bevestigLabel="Verwijderen"
+        bezig={bezig}
+        onBevestig={verwijderen}
+      />
     </AppShell>
   );
 }

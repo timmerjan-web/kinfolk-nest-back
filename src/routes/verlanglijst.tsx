@@ -8,9 +8,11 @@ import { VerlanglijstForm } from "@/components/verlanglijst-form";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { foutTekst } from "@/lib/errors";
+import { toastOngedaanMaken } from "@/lib/ongedaanMaken";
 import {
   createVerlanglijstItem,
   deleteVerlanglijstItem,
+  herstelVerlanglijstItem,
   listVerlanglijst,
   toggleGekocht,
   type VerlanglijstInvoer,
@@ -88,19 +90,28 @@ function VerlanglijstPage() {
     }
   };
 
-  const toggle = async (item: VerlanglijstItem) => {
+  const zetGekocht = async (item: VerlanglijstItem, gekocht: boolean) => {
     if (!user) return;
-    const nieuw = !item.gekocht;
     setItems((huidig) =>
       (huidig ?? []).map((i) =>
-        i.id === item.id ? { ...i, gekocht: nieuw, gekocht_door: nieuw ? user.id : null } : i,
+        i.id === item.id ? { ...i, gekocht, gekocht_door: gekocht ? user.id : null } : i,
       ),
     );
     try {
-      await toggleGekocht(item.id, nieuw, user.id);
+      await toggleGekocht(item.id, gekocht, user.id);
     } catch (err) {
       toast.error(foutTekst(err, "Bijwerken mislukt."));
       laad();
+    }
+  };
+
+  // Undo aanbieden bij het markeren als gekocht; terugzetten is zelf al
+  // de undo-actie en hoeft dus geen eigen undo-toast te krijgen.
+  const toggle = async (item: VerlanglijstItem) => {
+    const nieuw = !item.gekocht;
+    await zetGekocht(item, nieuw);
+    if (nieuw) {
+      toastOngedaanMaken(`"${item.titel}" gemarkeerd als gekocht.`, () => zetGekocht(item, false));
     }
   };
 
@@ -108,6 +119,14 @@ function VerlanglijstPage() {
     setItems((huidig) => (huidig ?? []).filter((i) => i.id !== item.id));
     try {
       await deleteVerlanglijstItem(item.id);
+      toastOngedaanMaken(`"${item.titel}" verwijderd.`, async () => {
+        try {
+          await herstelVerlanglijstItem(item);
+          setItems((huidig) => [...(huidig ?? []), item]);
+        } catch (err) {
+          toast.error(foutTekst(err, "Herstellen mislukt."));
+        }
+      });
     } catch (err) {
       toast.error(foutTekst(err, "Verwijderen mislukt."));
       laad();

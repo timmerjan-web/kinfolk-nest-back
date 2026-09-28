@@ -11,9 +11,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { foutTekst } from "@/lib/errors";
+import { toastOngedaanMaken } from "@/lib/ongedaanMaken";
 import {
   createPrikbordItem,
   deletePrikbordItem,
+  herstelPrikbordItem,
   listPrikbord,
   signedUrl,
   togglePin,
@@ -115,6 +117,17 @@ function PrikbordPage() {
     try {
       await deletePrikbordItem(item);
       laad();
+      toastOngedaanMaken(
+        item.storage_pad ? "Notitie verwijderd (foto niet te herstellen)." : "Notitie verwijderd.",
+        async () => {
+          try {
+            await herstelPrikbordItem(item);
+            laad();
+          } catch (err) {
+            toast.error(foutTekst(err, "Herstellen mislukt."));
+          }
+        },
+      );
     } catch (err) {
       toast.error(foutTekst(err, "Verwijderen mislukt."));
     }

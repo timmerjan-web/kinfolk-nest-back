@@ -3,11 +3,13 @@ import { useCallback, useEffect, useState } from "react";
 import { Pencil, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, SectionCard } from "@/components/app-shell";
+import { BevestigDialog } from "@/components/bevestig-dialog";
 import { RequireGezin } from "@/components/require-auth";
 import { KlusSjabloonForm } from "@/components/klus-sjabloon-form";
 import { useAuth } from "@/lib/auth";
 import { foutTekst } from "@/lib/errors";
 import { klusIcoon } from "@/lib/klusIconen";
+import { telKlusjesVoorSjabloon } from "@/lib/klusjes";
 import {
   createKlusSjabloon,
   deleteKlusSjabloon,
@@ -31,6 +33,8 @@ function KlusSjablonenPage() {
   const [nieuwOpen, setNieuwOpen] = useState(false);
   const [bewerkId, setBewerkId] = useState<string | null>(null);
   const [bezig, setBezig] = useState(false);
+  const [teVerwijderen, setTeVerwijderen] = useState<KlusSjabloon | null>(null);
+  const [ingeplandAantal, setIngeplandAantal] = useState<number | null>(null);
   const isOuder = profile?.rol === "ouder";
 
   const laad = useCallback(() => {
@@ -72,13 +76,29 @@ function KlusSjablonenPage() {
     }
   };
 
-  const verwijderen = async (sjabloon: KlusSjabloon) => {
-    setSjablonen((huidig) => (huidig ?? []).filter((s) => s.id !== sjabloon.id));
+  const openVerwijderDialoog = async (sjabloon: KlusSjabloon) => {
+    setTeVerwijderen(sjabloon);
+    setIngeplandAantal(null);
+    try {
+      setIngeplandAantal(await telKlusjesVoorSjabloon(sjabloon.id));
+    } catch {
+      setIngeplandAantal(0);
+    }
+  };
+
+  const verwijderen = async () => {
+    if (!teVerwijderen) return;
+    const sjabloon = teVerwijderen;
+    setBezig(true);
     try {
       await deleteKlusSjabloon(sjabloon.id);
+      setSjablonen((huidig) => (huidig ?? []).filter((s) => s.id !== sjabloon.id));
+      setTeVerwijderen(null);
+      toast.success("Verwijderd.");
     } catch (err) {
       toast.error(foutTekst(err, "Verwijderen mislukt."));
-      laad();
+    } finally {
+      setBezig(false);
     }
   };
 
@@ -139,13 +159,36 @@ function KlusSjablonenPage() {
                   sjabloon={sjabloon}
                   isOuder={isOuder}
                   onBewerk={() => setBewerkId(sjabloon.id)}
-                  onVerwijder={() => void verwijderen(sjabloon)}
+                  onVerwijder={() => void openVerwijderDialoog(sjabloon)}
                 />
               ),
             )}
           </ul>
         </SectionCard>
       )}
+
+      <BevestigDialog
+        open={teVerwijderen !== null}
+        onOpenChange={(open) => !open && setTeVerwijderen(null)}
+        titel={`Klus "${teVerwijderen?.titel}" uit de catalogus verwijderen?`}
+        beschrijving={
+          ingeplandAantal === null ? (
+            "Bezig met controleren…"
+          ) : ingeplandAantal > 0 ? (
+            <>
+              Er {ingeplandAantal === 1 ? "staat" : "staan"} nog {ingeplandAantal}{" "}
+              {ingeplandAantal === 1 ? "openstaand klusje" : "openstaande klusjes"} gekoppeld aan
+              deze catalogus-klus. Die blijven gewoon bestaan, maar verliezen de koppeling met de
+              catalogus.
+            </>
+          ) : (
+            "Geen openstaande klusjes gekoppeld aan deze catalogus-klus."
+          )
+        }
+        bevestigLabel="Verwijderen"
+        bezig={bezig || ingeplandAantal === null}
+        onBevestig={verwijderen}
+      />
     </AppShell>
   );
 }

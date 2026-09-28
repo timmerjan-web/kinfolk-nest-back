@@ -50,3 +50,10 @@ export async function deleteVerlanglijstItem(id: string) {
   const { error } = await supabase.from("verlanglijst_items").delete().eq("id", id);
   if (error) throw error;
 }
+
+// Zet een verwijderd item terug — gebruikt door de "Ongedaan maken"-actie
+// op de undo-toast.
+export async function herstelVerlanglijstItem(item: VerlanglijstItem) {
+  const { error } = await supabase.from("verlanglijst_items").insert(item);
+  if (error) throw error;
+}

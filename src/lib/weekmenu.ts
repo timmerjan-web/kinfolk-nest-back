@@ -62,6 +62,13 @@ export async function deleteDag(id: string) {
   if (error) throw error;
 }
 
+// Zet een verwijderde maaltijd terug — gebruikt door de "Ongedaan
+// maken"-actie op de undo-toast.
+export async function herstelDag(item: WeekmenuItem) {
+  const { error } = await supabase.from("weekmenu_items").insert(item);
+  if (error) throw error;
+}
+
 // -- Datumhelpers (lokale tijd, geen UTC-shift zoals toISOString geeft) --
 
 export function startOfWeek(d: Date): Date {

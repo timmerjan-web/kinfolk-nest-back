@@ -10,6 +10,7 @@ import { PersoonBadge } from "@/components/persoon-badge";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { foutTekst } from "@/lib/errors";
+import { toastOngedaanMaken } from "@/lib/ongedaanMaken";
 import {
   createKlusje,
   deleteKlusje,
@@ -83,6 +84,8 @@ function KlusjesPage() {
 
   const toggle = async (klusje: Klusje) => {
     if (!user || !profile?.gezin_id) return;
+    const gezinId = profile.gezin_id;
+    const userId = user.id;
     const nieuw = !klusje.afgerond;
 
     if (nieuw && klusje.herhaling) {
@@ -90,7 +93,7 @@ function KlusjesPage() {
       // nieuwe deadline — geen simpele optimistic flip, gewoon de
       // echte (gereset) rij ophalen.
       try {
-        await toggleAfgerond(klusje, nieuw, profile.gezin_id, user.id);
+        await toggleAfgerond(klusje, nieuw, gezinId, userId);
         toast.success("Klusje afgerond — nieuwe cyclus ingepland.");
         laad();
       } catch (err) {
@@ -103,7 +106,21 @@ function KlusjesPage() {
       (huidig ?? []).map((k) => (k.id === klusje.id ? { ...k, afgerond: nieuw } : k)),
     );
     try {
-      await toggleAfgerond(klusje, nieuw, profile.gezin_id, user.id);
+      await toggleAfgerond(klusje, nieuw, gezinId, userId);
+      // Undo aanbieden bij het afvinken; terugzetten is zelf al de
+      // undo-actie en hoeft dus geen eigen undo-toast te krijgen.
+      if (nieuw) {
+        toastOngedaanMaken(`"${klusje.titel}" afgerond.`, async () => {
+          setKlusjes((huidig) =>
+            (huidig ?? []).map((k) => (k.id === klusje.id ? { ...k, afgerond: false } : k)),
+          );
+          try {
+            await toggleAfgerond(klusje, false, gezinId, userId);
+          } catch (err) {
+            toast.error(foutTekst(err, "Bijwerken mislukt."));
+          }
+        });
+      }
     } catch (err) {
       toast.error(foutTekst(err, "Bijwerken mislukt."));
       setKlusjes((huidig) =>

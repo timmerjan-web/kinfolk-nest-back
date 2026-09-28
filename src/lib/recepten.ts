@@ -3,6 +3,7 @@
 // bij de gezin_id/rol-kolommen op profiles.
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { toDatumString } from "./weekmenu";
 
 export type Recept = Tables<"recepten">;
 
@@ -104,6 +105,18 @@ export async function publiceerRecept(id: string, invoer: ReceptInvoer) {
 export async function deleteRecept(id: string) {
   const { error } = await supabase.from("recepten").delete().eq("id", id);
   if (error) throw error;
+}
+
+// Aantal keer dat dit recept nog in een toekomstig (of huidig) weekmenu
+// staat gepland — voor de waarschuwing bij het verwijderen.
+export async function telToekomstigWeekmenuGebruik(receptId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from("weekmenu_items")
+    .select("id", { count: "exact", head: true })
+    .eq("recept_id", receptId)
+    .gte("datum", toDatumString(new Date()));
+  if (error) throw error;
+  return count ?? 0;
 }
 
 // Aanmaken vanuit "delen vanuit Instagram" — categorie blijft weg uit de

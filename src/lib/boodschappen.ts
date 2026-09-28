@@ -46,6 +46,14 @@ export async function deleteItem(id: string) {
   if (error) throw error;
 }
 
+// Zet een verwijderd item terug — gebruikt door de "Ongedaan maken"-actie
+// op de undo-toast. Herinserteert de volledige rij (zelfde id), zodat het
+// exact hetzelfde item is, niet een nieuw item met een nieuwe id.
+export async function herstelItem(item: BoodschappenItem) {
+  const { error } = await supabase.from("boodschappen_items").insert(item);
+  if (error) throw error;
+}
+
 export async function verwijderAfgevinkt() {
   const { error } = await supabase.from("boodschappen_items").delete().eq("afgevinkt", true);
   if (error) throw error;
