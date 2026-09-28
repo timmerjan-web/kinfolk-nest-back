@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { AppShell, SectionCard } from "@/components/app-shell";
 import { RequireGezin } from "@/components/require-auth";
 import { Button } from "@/components/ui/button";
+import { BevestigDialog } from "@/components/bevestig-dialog";
 import { KlusjeForm } from "@/components/klusje-form";
 import { PersoonBadge } from "@/components/persoon-badge";
 import { useAuth } from "@/lib/auth";
@@ -40,6 +41,7 @@ function KlusjesPage() {
   const [sjablonen, setSjablonen] = useState<KlusSjabloon[]>([]);
   const [nieuwOpen, setNieuwOpen] = useState(false);
   const [bezig, setBezig] = useState(false);
+  const [teVerwijderen, setTeVerwijderen] = useState<Klusje | null>(null);
 
   const laad = useCallback(() => {
     listKlusjes()
@@ -129,13 +131,19 @@ function KlusjesPage() {
     }
   };
 
-  const verwijderen = async (klusje: Klusje) => {
-    setKlusjes((huidig) => (huidig ?? []).filter((k) => k.id !== klusje.id));
+  const verwijderen = async () => {
+    const klusje = teVerwijderen;
+    if (!klusje) return;
+    setBezig(true);
     try {
       await deleteKlusje(klusje.id);
+      setKlusjes((huidig) => (huidig ?? []).filter((k) => k.id !== klusje.id));
+      setTeVerwijderen(null);
+      toast.success(`"${klusje.titel}" verwijderd.`);
     } catch (err) {
       toast.error(foutTekst(err, "Verwijderen mislukt."));
-      laad();
+    } finally {
+      setBezig(false);
     }
   };
 
