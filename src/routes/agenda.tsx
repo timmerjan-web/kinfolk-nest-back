@@ -30,6 +30,12 @@ import {
   type ExterneAfspraak,
   type ExterneAgendaResultaat,
 } from "@/lib/externeAgenda";
+import {
+  formatteerFracties,
+  haalIvagoRonde,
+  haalOphalingen,
+  type WasteCollection,
+} from "@/lib/ivago";
 import { addDays, toDatumString } from "@/lib/weekmenu";
 
 export const Route = createFileRoute("/agenda")({
@@ -43,10 +49,13 @@ export const Route = createFileRoute("/agenda")({
 
 type ExternAfspraakMetPersoon = ExterneAfspraak & { gebruiker_id: string; naam: string };
 type WeergaveItem =
-  { soort: "eigen"; item: AgendaItem } | { soort: "extern"; afspraak: ExternAfspraakMetPersoon };
+  | { soort: "eigen"; item: AgendaItem }
+  | { soort: "extern"; afspraak: ExternAfspraakMetPersoon }
+  | { soort: "afval"; ophaling: WasteCollection };
 
 function sorteersleutel(wi: WeergaveItem): string {
   if (wi.soort === "eigen") return wi.item.tijd ?? "";
+  if (wi.soort === "afval") return "";
   if (wi.afspraak.heleDag) return "";
   return new Date(wi.afspraak.start).toTimeString().slice(0, 8);
 }
@@ -67,6 +76,7 @@ function AgendaPage() {
   const [verwijderBezig, setVerwijderBezig] = useState(false);
   const [teOntkoppelen, setTeOntkoppelen] = useState<AgendaKoppeling | null>(null);
   const [ontkoppelBezig, setOntkoppelBezig] = useState(false);
+  const [ophalingen, setOphalingen] = useState<WasteCollection[]>([]);
 
   const laad = useCallback(() => {
     listAgenda()
@@ -106,6 +116,18 @@ function AgendaPage() {
   useEffect(() => {
     laadExtern();
   }, [laadExtern, koppelingen.length]);
+
+  useEffect(() => {
+    if (!profile?.gezin_id) return;
+    haalIvagoRonde(profile.gezin_id)
+      .then((ronde) => {
+        if (!ronde) return;
+        const vanaf = toDatumString(addDays(new Date(), -7));
+        const tot = toDatumString(addDays(new Date(), 120));
+        return haalOphalingen(ronde, vanaf, tot).then(setOphalingen);
+      })
+      .catch(() => {});
+  }, [profile?.gezin_id]);
 
   const koppelen = async (e: FormEvent) => {
     e.preventDefault();
@@ -191,11 +213,16 @@ function AgendaPage() {
         kaart.set(datum, lijst);
       }
     }
+    for (const ophaling of ophalingen) {
+      const lijst = kaart.get(ophaling.datum) ?? [];
+      lijst.push({ soort: "afval", ophaling });
+      kaart.set(ophaling.datum, lijst);
+    }
     for (const lijst of kaart.values()) {
       lijst.sort((a, b) => sorteersleutel(a).localeCompare(sorteersleutel(b)));
     }
     return kaart;
-  }, [items, externeResultaten]);
+  }, [items, externeResultaten, ophalingen]);
 
   const datums = Array.from(perDag.keys()).sort();
   const aankomendDatums = datums.filter((d) => d >= vandaag);
@@ -256,6 +283,8 @@ function AgendaPage() {
                       leden={leden}
                       onVerwijder={setTeVerwijderen}
                     />
+                  ) : wi.soort === "afval" ? (
+                    <AfvalRij key={`afval-${datum}`} ophaling={wi.ophaling} morgenStr={morgen} />
                   ) : (
                     <ExternRij key={`extern-${datum}-${i}`} afspraak={wi.afspraak} />
                   ),
@@ -416,6 +445,21 @@ function AgendaRij({
       >
         <Trash2 className="h-3.5 w-3.5" />
       </button>
+    </li>
+  );
+}
+
+function AfvalRij({ ophaling, morgenStr }: { ophaling: WasteCollection; morgenStr: string }) {
+  return (
+    <li className="flex items-start gap-2 rounded-lg border border-dashed border-border px-2 py-1.5">
+      <Trash2 className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+      <div className="min-w-0 flex-1">
+        <p className="text-sm">Afvalophaling</p>
+        <p className="text-[11px] text-muted-foreground">
+          {formatteerFracties(ophaling.fracties)}
+          {ophaling.datum === morgenStr && " — buitenzetten vanavond"}
+        </p>
+      </div>
     </li>
   );
 }

@@ -13,7 +13,12 @@ import { type Klusje } from "@/lib/klusjes";
 import { dagenTotVerjaardag, formatteerVerjaardag } from "@/lib/verjaardagen";
 import { listVerjaardagen, type VerjaardagContact } from "@/lib/verjaardagenContacten";
 import { haalExterneAfspraken, type ExterneAgendaResultaat } from "@/lib/externeAgenda";
-import { haalIvagoRonde, volgendeOphaling, type WasteCollection } from "@/lib/ivago";
+import {
+  formatteerFracties,
+  haalIvagoRonde,
+  volgendeOphaling,
+  type WasteCollection,
+} from "@/lib/ivago";
 
 type EerstkomendItem = {
   key: string;
@@ -240,7 +245,7 @@ function TodayPage() {
               <span className="font-mono text-xs text-muted-foreground">
                 {dagLabel(ophaling.datum, vandaagStr, morgenStr)}
               </span>{" "}
-              {ophaling.fracties.join(", ")}
+              {formatteerFracties(ophaling.fracties)}
             </p>
           )}
         </SectionCard>

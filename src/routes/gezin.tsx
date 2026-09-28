@@ -13,8 +13,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { foutTekst } from "@/lib/errors";
 import { formatteerVerjaardag } from "@/lib/verjaardagen";
 import {
+  haalIvagoKlusjeAanmaken,
   haalIvagoRonde,
   haalKalenderStatus,
+  zetIvagoKlusjeAanmaken,
   zetIvagoRonde,
   type WasteCalendarStatus,
 } from "@/lib/ivago";
@@ -50,6 +52,8 @@ function GezinPage() {
   const [ivagoInvoer, setIvagoInvoer] = useState("");
   const [ivagoBezig, setIvagoBezig] = useState(false);
   const [ivagoStatus, setIvagoStatus] = useState<WasteCalendarStatus | null>(null);
+  const [ivagoKlusjeAanmaken, setIvagoKlusjeAanmaken] = useState(false);
+  const [ivagoKlusjeBezig, setIvagoKlusjeBezig] = useState(false);
 
   const laadGezin = useCallback(async () => {
     if (!profile?.gezin_id) return;
@@ -86,7 +90,27 @@ function GezinPage() {
     haalKalenderStatus()
       .then(setIvagoStatus)
       .catch(() => {});
+    haalIvagoKlusjeAanmaken(profile.gezin_id)
+      .then(setIvagoKlusjeAanmaken)
+      .catch(() => {});
   }, [profile?.gezin_id]);
+
+  const wisselIvagoKlusjeAanmaken = async () => {
+    if (!profile?.gezin_id) return;
+    const nieuw = !ivagoKlusjeAanmaken;
+    setIvagoKlusjeBezig(true);
+    try {
+      await zetIvagoKlusjeAanmaken(profile.gezin_id, nieuw);
+      setIvagoKlusjeAanmaken(nieuw);
+      toast.success(
+        nieuw ? "Klusje wordt voortaan aangemaakt." : "Klusje wordt niet meer aangemaakt.",
+      );
+    } catch (err) {
+      toast.error(foutTekst(err, "Opslaan mislukt."));
+    } finally {
+      setIvagoKlusjeBezig(false);
+    }
+  };
 
   const opslaanIvagoRonde = async () => {
     if (!profile?.gezin_id) return;
@@ -316,6 +340,25 @@ function GezinPage() {
             {kalenderVerouderd &&
               " — dit is langer geleden dan verwacht, controleer de instelling."}
           </p>
+        )}
+        {ivagoRonde && isOuder && (
+          <div className="mt-3 flex items-center justify-between gap-3 border-t border-border pt-3">
+            <div>
+              <p className="text-sm font-medium">Klusje aanmaken</p>
+              <p className="text-xs text-muted-foreground">
+                Zet de avond vóór een ophaling automatisch een onbeheerd "Afval buitenzetten"
+                -klusje klaar.
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant={ivagoKlusjeAanmaken ? "secondary" : "default"}
+              disabled={ivagoKlusjeBezig}
+              onClick={() => void wisselIvagoKlusjeAanmaken()}
+            >
+              {ivagoKlusjeBezig ? "Bezig…" : ivagoKlusjeAanmaken ? "Uit" : "Aan"}
+            </Button>
+          </div>
         )}
       </SectionCard>
 

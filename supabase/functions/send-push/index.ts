@@ -4,10 +4,7 @@
 // Supabase Database Webhooks/SQL-triggers op die twee tabellen — geen
 // CORS nodig, wordt alleen server-to-server door Supabase aangeroepen.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import webpush from "npm:web-push@3.6.7";
-
-const VAPID_PUBLIC_KEY =
-  "BJH87fvXUMFNi0fYBhMRcWdr4-J9LqPl8uU1iQhxAsbbJPXnlnYDieaqw8H4dnBjyp3JlX5wF6jSsNWqFq-jbbQ";
+import { stuurPushNaarGebruikers } from "../_shared/webpush.ts";
 
 type KlusjesRecord = { id: string; gezin_id: string; titel: string; toegewezen_aan: string | null };
 type VoltooiingRecord = { klusje_id: string; toegewezen_aan: string | null };
@@ -32,44 +29,13 @@ Deno.serve(async (req) => {
     const melding = await bepaalMelding(admin, payload);
     if (!melding) return json({ ok: true, reden: "geen melding nodig" });
 
-    const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY");
-    const vapidSubject = Deno.env.get("VAPID_SUBJECT") ?? "mailto:gezinsapp@example.com";
-    if (!vapidPrivateKey) throw new Error("VAPID_PRIVATE_KEY ontbreekt.");
-
-    webpush.setVapidDetails(vapidSubject, VAPID_PUBLIC_KEY, vapidPrivateKey);
-
-    const { data: abonnementen, error } = await admin
-      .from("push_abonnementen")
-      .select("id, endpoint, p256dh, auth")
-      .eq("gebruiker_id", melding.ontvangerId);
-    if (error) throw error;
-
-    const payloadTekst = JSON.stringify({
+    const verstuurd = await stuurPushNaarGebruikers(admin, [melding.ontvangerId], {
       title: melding.titel,
       body: melding.body,
       url: "/klusjes",
     });
 
-    await Promise.all(
-      (abonnementen ?? []).map(async (abonnement) => {
-        try {
-          await webpush.sendNotification(
-            {
-              endpoint: abonnement.endpoint,
-              keys: { p256dh: abonnement.p256dh, auth: abonnement.auth },
-            },
-            payloadTekst,
-          );
-        } catch (err) {
-          const status = (err as { statusCode?: number }).statusCode;
-          if (status === 404 || status === 410) {
-            await admin.from("push_abonnementen").delete().eq("id", abonnement.id);
-          }
-        }
-      }),
-    );
-
-    return json({ ok: true, verstuurd: (abonnementen ?? []).length });
+    return json({ ok: true, verstuurd });
   } catch (err) {
     return json({ ok: false, error: err instanceof Error ? err.message : "Onbekende fout." }, 500);
   }
@@ -85,7 +51,11 @@ async function bepaalMelding(
     if (payload.type === "UPDATE" && record.toegewezen_aan === payload.old_record?.toegewezen_aan) {
       return null;
     }
-    return { ontvangerId: record.toegewezen_aan, titel: "Nieuw klusje toegewezen", body: record.titel };
+    return {
+      ontvangerId: record.toegewezen_aan,
+      titel: "Nieuw klusje toegewezen",
+      body: record.titel,
+    };
   }
 
   if (payload.table === "klus_voltooiingen") {
@@ -111,7 +81,9 @@ async function bepaalMelding(
     return {
       ontvangerId: klusje.created_by,
       titel: "Klusje voltooid",
-      body: doorNaam ? `${doorNaam} heeft "${klusje.titel}" afgerond` : `"${klusje.titel}" is afgerond`,
+      body: doorNaam
+        ? `${doorNaam} heeft "${klusje.titel}" afgerond`
+        : `"${klusje.titel}" is afgerond`,
     };
   }
 

@@ -224,18 +224,21 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          ivago_klusje_aanmaken: boolean
           ivago_ronde: string | null
           naam: string
         }
         Insert: {
           created_at?: string
           id?: string
+          ivago_klusje_aanmaken?: boolean
           ivago_ronde?: string | null
           naam: string
         }
         Update: {
           created_at?: string
           id?: string
+          ivago_klusje_aanmaken?: boolean
           ivago_ronde?: string | null
           naam?: string
         }
