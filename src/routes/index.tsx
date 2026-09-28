@@ -1,6 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { BookOpen, CalendarClock, Camera, ChefHat, Gift, Heart, ListChecks } from "lucide-react";
+import {
+  BookOpen,
+  CalendarClock,
+  CalendarRange,
+  Camera,
+  ChefHat,
+  Gift,
+  Heart,
+  ListChecks,
+} from "lucide-react";
 import { AppShell, SectionCard } from "@/components/app-shell";
 import { RequireGezin } from "@/components/require-auth";
 import { FotoVanDeDag } from "@/components/foto-van-de-dag";
@@ -250,7 +259,14 @@ function TodayPage() {
         <div className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Meer
         </div>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-4 gap-2">
+          <Link
+            to="/weekstart"
+            className="flex flex-col items-center gap-1 rounded-lg py-3 text-center hover:bg-muted"
+          >
+            <CalendarRange className="h-5 w-5 text-muted-foreground" />
+            <span className="text-[11px]">Weekstart</span>
+          </Link>
           <Link
             to="/verlanglijst"
             className="flex flex-col items-center gap-1 rounded-lg py-3 text-center hover:bg-muted"

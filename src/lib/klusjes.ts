@@ -100,11 +100,22 @@ export async function deleteKlusje(id: string) {
   if (error) throw error;
 }
 
+// Kent een klusje toe (of maakt het weer onbeheerd) zonder de volledige
+// KlusjeForm te openen — gebruikt door het Weekstart-scherm om dit
+// inline te kunnen doen.
+export async function toewijzen(id: string, persoonId: string | null) {
+  const { error } = await supabase
+    .from("klusjes")
+    .update({ toegewezen_aan: persoonId })
+    .eq("id", id);
+  if (error) throw error;
+}
+
 // Formatteert een "YYYY-MM-DD"-datumstring zonder via Date-parsing te gaan
 // (new Date("YYYY-MM-DD") parset als UTC-middernacht en kan een dag
 // terugschuiven in tijdzones ten westen van UTC).
 export function formatteerDeadline(datumString: string): string {
-const [jaar, maand, dag] = datumString.split("-").map(Number) as [number, number, number];
+  const [jaar, maand, dag] = datumString.split("-").map(Number) as [number, number, number];
   const datum = new Date(jaar, maand - 1, dag);
   return datum.toLocaleDateString("nl-NL", { day: "numeric", month: "short" });
 }
