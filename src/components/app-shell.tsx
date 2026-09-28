@@ -135,7 +135,7 @@ export function AppShell({
 
       {!terug && actieveSectie?.subNav && (
         <div className="border-b border-border bg-background px-4 py-2">
-          <div className="mx-auto flex max-w-2xl gap-2">
+          <div className="mx-auto flex max-w-2xl flex-wrap gap-2">
             {actieveSectie.subNav.map((item) => {
               const actief = item.to === "/" ? pathname === "/" : pathname.startsWith(item.to);
               return (
