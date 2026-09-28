@@ -83,4 +83,64 @@ Recept volgt nog een keertje!
     expect(resultaat.tijd_min).toBeNull();
     expect(resultaat.url).toBeNull();
   });
+
+  it("herkent kopjes ook met emoji of andere versiering eromheen, maar niet als onderdeel van een gewone zin", () => {
+    const bijschrift = `Kip teriyaki bowl 🍜
+
+🛒 Ingrediënten 👇
+- 2 kipfilets
+- rijst
+- teriyakisaus
+
+👩‍🍳 BEREIDING:
+1. Kip bakken
+2. Rijst koken
+
+Ingrediënten voor de saus vind je in mijn stories
+#lekker #snel`;
+
+    const resultaat = parseRecept(bijschrift);
+
+    expect(resultaat.titel).toBe("Kip teriyaki bowl 🍜");
+    expect(resultaat.ingredienten).toEqual(["2 kipfilets", "rijst", "teriyakisaus"]);
+    expect(resultaat.bereiding).toEqual([
+      "Kip bakken",
+      "Rijst koken",
+      "Ingrediënten voor de saus vind je in mijn stories",
+    ]);
+  });
+
+  it("vangt een kale opsomming (geen 'Ingrediënten'/'Bereiding'-kopje) op als bereidingsstappen", () => {
+    // Uit een echt Instagram-bijschrift: begint meteen met bullets, geen
+    // aparte ingrediëntensectie — de ingrediënten zitten verweven in de
+    // stappen zelf (peper, zout, knoflookpoeder, …) en blijven dus terecht
+    // leeg. De afsluitende losse zin ("Smakelijk!!!") hoort niet bij de
+    // stappen en wordt niet meegenomen.
+    const bijschrift = `Kruidige aardappeltjes uit de oven
+
+- Was de aardappelen met schil.
+- Snij in partjes
+- Kook de partjes aardappel een 5-6 tal minuten
+- Giet ze af in een vergiet..
+- Kruid de aardappeltjes goed met peper, zout, knoflookpoeder, paprikapoeder, tijm, rozemarijn.
+- Leg ze naast elkaar op een bakplaat, ongeveer 25-30 minuten.
+- Schep tussen door de patatjes eens om.
+
+Smakelijk!!!`;
+
+    const resultaat = parseRecept(bijschrift);
+
+    expect(resultaat.titel).toBe("Kruidige aardappeltjes uit de oven");
+    expect(resultaat.ingredienten).toEqual([]);
+    expect(resultaat.bereiding).toEqual([
+      "Was de aardappelen met schil.",
+      "Snij in partjes",
+      "Kook de partjes aardappel een 5-6 tal minuten",
+      "Giet ze af in een vergiet..",
+      "Kruid de aardappeltjes goed met peper, zout, knoflookpoeder, paprikapoeder, tijm, rozemarijn.",
+      "Leg ze naast elkaar op een bakplaat, ongeveer 25-30 minuten.",
+      "Schep tussen door de patatjes eens om.",
+    ]);
+    expect(resultaat.tijd_min).toBe(30);
+  });
 });

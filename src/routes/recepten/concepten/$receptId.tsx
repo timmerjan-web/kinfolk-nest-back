@@ -121,7 +121,10 @@ function ReceptConceptPage() {
   }
 
   return (
-    <AppShell title={recept.titel || "Nieuw concept"} terug="/recepten/concepten">
+    <AppShell
+      title={herverwerkt?.titel || recept.titel || "Nieuw concept"}
+      terug="/recepten/concepten"
+    >
       <SectionCard className="mb-3">
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           {recept.bron && <span className="capitalize">Gedeeld via {recept.bron}</span>}

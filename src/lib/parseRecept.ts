@@ -13,8 +13,8 @@ export type ParsedRecept = {
   url: string | null;
 };
 
-const INGREDIENTEN_KOP = /^(ingredi[eë]nten|nodig)\s*:?\s*$/i;
-const BEREIDING_KOP = /^(bereiding|stappen|werkwijze|aanpak|methode)\s*:?\s*$/i;
+const INGREDIENTEN_WOORDEN = new Set(["ingrediënten", "ingredienten", "nodig"]);
+const BEREIDING_WOORDEN = new Set(["bereiding", "stappen", "werkwijze", "aanpak", "methode"]);
 const URL_REGEX = /https?:\/\/\S+/i;
 const PORTIES_REGEX = /(?:voor\s+)?(\d+)\s*(?:personen|persoon|pers\.?)\b/i;
 // "30 min", "45 minuten"; uren apart afgevangen door UUR_REGEX hieronder.
@@ -22,16 +22,43 @@ const MINUTEN_REGEX = /(\d+)\s*min(?:uten|uut)?\b/i;
 // "1 uur 15", "1 uur", "1u15", "2 uur"
 const UUR_REGEX = /(\d+)\s*u(?:ur)?\.?\s*(\d+)?/i;
 
+const OPSOMMING_PREFIX = /^[•\-*]\s*/;
+const NUMMERING_PREFIX = /^\s*\d+[.)]\s*/;
+
 function stripOpsomming(regel: string): string {
-  return regel.replace(/^[•\-*]\s*/, "").trim();
+  return regel.replace(OPSOMMING_PREFIX, "").trim();
 }
 
 function stripNummering(regel: string): string {
-  return regel.replace(/^\s*\d+[.)]\s*/, "").trim();
+  return regel.replace(NUMMERING_PREFIX, "").trim();
+}
+
+function isLijstregel(regel: string): boolean {
+  return OPSOMMING_PREFIX.test(regel) || NUMMERING_PREFIX.test(regel);
+}
+
+// Herleidt een regel tot de kale letters (emoji, leestekens, cijfers en
+// overtollige spaties eruit) zodat "🥗 Ingrediënten:" en "INGREDIËNTEN 👇"
+// nog steeds als het kopje "ingrediënten" herkend worden. Een regel met
+// nog ander tekstueel materiaal ("Ingrediënten voor de saus") normaliseert
+// naar iets anders dan het kale kopwoord en wordt terecht niet herkend.
+function kernWoorden(regel: string): string {
+  return regel
+    .replace(/[^\p{L}\s]/gu, " ")
+    .trim()
+    .toLowerCase();
+}
+
+function isIngredientenKop(regel: string): boolean {
+  return INGREDIENTEN_WOORDEN.has(kernWoorden(regel));
+}
+
+function isBereidingKop(regel: string): boolean {
+  return BEREIDING_WOORDEN.has(kernWoorden(regel));
 }
 
 function isKopregel(regel: string): boolean {
-  return INGREDIENTEN_KOP.test(regel) || BEREIDING_KOP.test(regel);
+  return isIngredientenKop(regel) || isBereidingKop(regel);
 }
 
 // Een regel die enkel uit hashtags bestaat ("#pasta #snel #vegetarisch"),
@@ -83,14 +110,18 @@ export function parseRecept(tekst: string): ParsedRecept {
   const bereiding: string[] = [];
   let modus: "geen" | "ingredienten" | "bereiding" = "geen";
   let titel = "";
+  let titelRegel: string | null = null;
+  let kopGevonden = false;
 
   for (const regel of regels) {
-    if (INGREDIENTEN_KOP.test(regel)) {
+    if (isIngredientenKop(regel)) {
       modus = "ingredienten";
+      kopGevonden = true;
       continue;
     }
-    if (BEREIDING_KOP.test(regel)) {
+    if (isBereidingKop(regel)) {
       modus = "bereiding";
+      kopGevonden = true;
       continue;
     }
     if (modus === "ingredienten") {
@@ -108,6 +139,23 @@ export function parseRecept(tekst: string): ParsedRecept {
     // de titel.
     if (!titel && !isKopregel(regel) && !isHoeveelheidsregel(regel)) {
       titel = stripOpsomming(regel);
+      titelRegel = regel;
+    }
+  }
+
+  // Geen enkel kopje gevonden, maar wel een opsomming: heel gebruikelijk
+  // bij Instagram-bijschriften die meteen met de stappen beginnen, zonder
+  // aparte "Ingrediënten"-sectie. Die bullets/nummering zijn duidelijk
+  // bedoeld als stappenlijst — losse zinnen ertussenuit (bv. een afsluiter
+  // als "Smakelijk!") tellen niet mee. Ingrediënten blijven leeg: die
+  // zitten hier alleen los verweven in de stappen, en dat veilig uit
+  // elkaar trekken kan niet zonder te gokken.
+  if (!kopGevonden) {
+    for (const regel of regels) {
+      if (regel === titelRegel) continue;
+      if (isLijstregel(regel)) {
+        bereiding.push(stripNummering(stripOpsomming(regel)));
+      }
     }
   }
 
