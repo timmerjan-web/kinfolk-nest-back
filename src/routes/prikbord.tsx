@@ -243,7 +243,7 @@ function PrikbordPage() {
                   <Input
                     value={bewerkTags}
                     onChange={(e) => setBewerkTags(e.target.value)}
-                    placeholder="Tags, met komma's gescheiden (optioneel)"
+                    placeholder="Tags (optioneel), bv. school, werk"
                   />
                   {item.storage_pad && (
                     <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
