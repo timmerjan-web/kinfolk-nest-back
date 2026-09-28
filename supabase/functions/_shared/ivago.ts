@@ -25,8 +25,8 @@
 // Opendatasoft-vorm), zonder envelope zoals { results: [...] }.
 
 export const IVAGO_VELD_DATUM = "datum";
-export const IVAGO_VELD_RONDE = "ronde";
-export const IVAGO_VELD_FRACTIE = "fractie";
+export const IVAGO_VELD_RONDE = "kalender";
+export const IVAGO_VELD_FRACTIE = "fracties";
 
 // Fracties die uitdrukkelijk NIET meetellen voor de patroonmatching en
 // de dagelijkse melding (grofvuil valt op wisselende, aparte dagen).
