@@ -309,7 +309,7 @@ function WeekstartPage() {
                   <div
                     className={`rounded-lg border p-2 ${vandaag ? "border-primary bg-primary/5" : "border-border"}`}
                   >
-                    <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    <p className="mb-0.5 text-[11px] font-semibold uppercase text-muted-foreground">
                       {DAGNAMEN[i]}
                       {vandaag && <span className="ml-1 text-primary">· vandaag</span>}
                     </p>

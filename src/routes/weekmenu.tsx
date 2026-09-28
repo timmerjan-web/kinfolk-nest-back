@@ -163,7 +163,7 @@ function WeekmenuPage() {
                       onClick={() => setBewerkDatum(datum)}
                       className="flex w-full items-center justify-between gap-2"
                     >
-                      <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      <span className="shrink-0 text-[11px] font-semibold uppercase text-muted-foreground">
                         {DAGNAMEN[i]}
                         {vandaag && <span className="ml-1 text-primary">· vandaag</span>}
                       </span>
@@ -174,7 +174,7 @@ function WeekmenuPage() {
                   ) : (
                     <>
                       <div className="mb-1 flex items-center justify-between">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        <p className="text-[11px] font-semibold uppercase text-muted-foreground">
                           {DAGNAMEN[i]}
                           {vandaag && <span className="ml-1 text-primary">· vandaag</span>}
                         </p>
