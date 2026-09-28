@@ -350,14 +350,21 @@ function GezinPage() {
                 -klusje klaar.
               </p>
             </div>
-            <Button
-              size="sm"
-              variant={ivagoKlusjeAanmaken ? "secondary" : "default"}
-              disabled={ivagoKlusjeBezig}
-              onClick={() => void wisselIvagoKlusjeAanmaken()}
-            >
-              {ivagoKlusjeBezig ? "Bezig…" : ivagoKlusjeAanmaken ? "Uit" : "Aan"}
-            </Button>
+            <div className="flex items-center gap-2">
+              <span
+                className={`text-[10px] font-semibold uppercase tracking-wide ${ivagoKlusjeAanmaken ? "text-primary" : "text-muted-foreground"}`}
+              >
+                {ivagoKlusjeAanmaken ? "Aan" : "Uit"}
+              </span>
+              <Button
+                size="sm"
+                variant={ivagoKlusjeAanmaken ? "secondary" : "default"}
+                disabled={ivagoKlusjeBezig}
+                onClick={() => void wisselIvagoKlusjeAanmaken()}
+              >
+                {ivagoKlusjeBezig ? "Bezig…" : ivagoKlusjeAanmaken ? "Zet uit" : "Zet aan"}
+              </Button>
+            </div>
           </div>
         )}
       </SectionCard>

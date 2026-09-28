@@ -68,14 +68,21 @@ export function PushInstellingen() {
             : "Meldingen werken alleen in de gepubliceerde app, geopend in een eigen browsertabblad (niet in de preview)."}
         </p>
       </div>
-      <Button
-        size="sm"
-        variant={ingeschakeld ? "secondary" : "default"}
-        disabled={bezig || !mogelijk}
-        onClick={() => void (ingeschakeld ? uitzetten() : aanzetten())}
-      >
-        {bezig ? "Bezig…" : ingeschakeld ? "Uit" : "Aan"}
-      </Button>
+      <div className="flex items-center gap-2">
+        <span
+          className={`text-[10px] font-semibold uppercase tracking-wide ${ingeschakeld ? "text-primary" : "text-muted-foreground"}`}
+        >
+          {ingeschakeld ? "Aan" : "Uit"}
+        </span>
+        <Button
+          size="sm"
+          variant={ingeschakeld ? "secondary" : "default"}
+          disabled={bezig || !mogelijk}
+          onClick={() => void (ingeschakeld ? uitzetten() : aanzetten())}
+        >
+          {bezig ? "Bezig…" : ingeschakeld ? "Zet uit" : "Zet aan"}
+        </Button>
+      </div>
     </div>
   );
 }
