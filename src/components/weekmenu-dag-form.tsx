@@ -1,4 +1,5 @@
-import { useState, type FormEvent } from "react";
+import { useMemo, useRef, useState, type FormEvent } from "react";
+import { BookOpen, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,11 +30,40 @@ export function WeekmenuDagForm({
   const [titel, setTitel] = useState(initieel?.titel ?? "");
   const [kok, setKok] = useState(initieel?.kok ?? "");
   const [notitie, setNotitie] = useState(initieel?.notitie ?? "");
+  const [lijstOpen, setLijstOpen] = useState(false);
+  const sluitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const resultaten = useMemo(() => {
+    const q = titel.trim().toLowerCase();
+    const matches = q
+      ? recepten.filter((r) => r.titel.toLowerCase().includes(q))
+      : recepten;
+    return matches.slice(0, 8);
+  }, [recepten, titel]);
+
+  const openLijst = () => {
+    if (sluitTimer.current) {
+      clearTimeout(sluitTimer.current);
+      sluitTimer.current = null;
+    }
+    setLijstOpen(true);
+  };
+
+  const sluitLijstLater = () => {
+    if (sluitTimer.current) clearTimeout(sluitTimer.current);
+    sluitTimer.current = setTimeout(() => setLijstOpen(false), 150);
+  };
 
   const kiesRecept = (id: string) => {
     setReceptId(id);
     const gekozen = recepten.find((r) => r.id === id);
     if (gekozen) setTitel(gekozen.titel);
+    setLijstOpen(false);
+  };
+
+  const ontkoppelRecept = () => {
+    setReceptId("");
+    setLijstOpen(false);
   };
 
   const submit = (e: FormEvent) => {
