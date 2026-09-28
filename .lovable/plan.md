@@ -1,26 +1,19 @@
-# Ophaalkalender rechtzetten
+# Ophaalkalender rechtzetten met het IVAGO-agendabestand
 
 ## Wat er misloopt
-De app neemt de data van de open databank van Stad Gent exact over. Maar die databank klopt zelf niet met de IVAGO-website. Voor de Zilverberklaan staan er fouten in, bijvoorbeeld:
-
-| IVAGO-website | Open databank (en dus de app) |
-|---|---|
-| ma 5 okt: GFT, papier, PMD | do 8 okt: GFT, papier, PMD |
-| ma 12 okt: restafval | ontbreekt |
-| ma 2 nov: GFT, papier, PMD | ontbreekt |
-| ma 9 nov: restafval | do 5 nov: restafval |
-
-19, 23 en 26 okt en 16, 23 en 30 nov kloppen wel. De ronde C1A is dus juist, maar de databank bevat verkeerde datums. Een andere instelling in de app lost dit niet op.
+De app neemt de open databank van Stad Gent exact over, maar die databank klopt zelf niet met de IVAGO-website. Een voorbeeld: in de databank staat 8 okt voor GFT, papier en PMD, terwijl IVAGO 5 okt aangeeft. Ook ontbreken 12 okt, 2 nov en 9 nov. Het agendabestand dat je doorstuurde komt wel overeen met je schermafbeeldingen.
 
 ## Oplossing
-De gegevens niet meer uit de open databank halen, maar uit IVAGO zelf: de agenda-link achter de knop **"SYNC Google / Outlook / Apple"** op ivago.be. Die komt overeen met wat jij op de site ziet.
+1. **Kalender vervangen door jouw bestand.** De oude ophaaldagen van ronde C1A worden gewist. Daarna laad ik de datums uit het bestand in: GFT, papier, PMD, restafval en kerstbomen, van 7 september 2026 tot 31 maart 2027. Grofvuil laat ik weg, zoals nu.
+2. **Automatisch vernieuwen stopzetten** voor jullie gezin. Anders overschrijft de open databank de juiste datums opnieuw.
+3. **Controle achteraf:** de komende datums voor oktober en november naast je schermafbeeldingen leggen.
 
-1. Jij kopieert die sync-link (voor Zilverberklaan 80) en plakt ze hier in de chat.
-2. Ik pas het vernieuwen van de kalender aan zodat het die agenda leest: per dag de fracties (GFT, papier, PMD, restafval, glas). Grofvuil blijft eruit, zoals nu.
-3. De link wordt bewaard bij je gezin, zodat de kalender automatisch vernieuwd blijft.
-4. Kalender opnieuw vullen en de komende datums naast jouw schermafbeeldingen leggen voor oktober en november.
+## Na 31 maart 2027
+Het bestand loopt tot en met 31 maart 2027. Voor daarna zijn er twee mogelijkheden:
+- Je downloadt dan het nieuwe bestand en stuurt het door, net zoals nu.
+- Of je stuurt de sync-link achter de knop "SYNC" op ivago.be door. Dan kan ik de kalender voortaan automatisch uit die link laten vullen.
 
 ## Technische details
-- Nieuwe kolom `gezinnen.ivago_ical_url` (migratie). `waste_collections` wordt dan per gezin gevuld, niet meer per ronde. Alternatief: rondecode behouden en de iCal gebruiken als bron voor C1A.
-- `ivago-refresh`: iCal parsen (VEVENT SUMMARY → fracties, DTSTART → datum), met hergebruik van de parser-aanpak uit `agenda-ics-proxy`. Daarna upsert in `waste_collections`.
-- `ivago-melden` blijft ongewijzigd lezen uit `waste_collections`.
+- Het bestand wordt geparsed via DTSTART (VALUE=DATE) en SUMMARY en daarna gegroepeerd per datum. De fracties worden in kleine letters opgeslagen, grofvuil wordt eruit gefilterd.
+- Het vervangen gebeurt via run_sql op `waste_collections` (ronde C1A): eerst een DELETE vanaf 2026-09-07, daarna een INSERT met de gegroepeerde rijen.
+- Het automatisch vernieuwen voor C1A wordt uitgeschakeld in `ivago-refresh`, met een lijst van rondes die overgeslagen worden. `ivago-melden` blijft ongewijzigd.
