@@ -106,7 +106,7 @@ function ReceptenPage() {
         <div className="flex items-center gap-1">
           <Link
             to="/recepten/concepten"
-            className="relative flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur"
+            className="relative flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20"
             aria-label="Concept-wachtrij"
           >
             <Inbox className="h-4 w-4" />
@@ -119,7 +119,7 @@ function ReceptenPage() {
           {profile?.rol === "ouder" && (
             <Link
               to="/recepten/import"
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20"
               aria-label="Recepten importeren"
             >
               <Upload className="h-4 w-4" />
@@ -127,7 +127,7 @@ function ReceptenPage() {
           )}
           <Link
             to="/recepten/nieuw"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20"
             aria-label="Nieuw recept"
           >
             <Plus className="h-4 w-4" />
