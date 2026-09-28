@@ -81,24 +81,6 @@ export function WeekmenuDagForm({
       onSubmit={submit}
       className="space-y-3 rounded-xl border border-border bg-card p-3 shadow-card"
     >
-      {recepten.length > 0 && (
-        <div>
-          <Label htmlFor="recept">Uit het kookboek</Label>
-          <select
-            id="recept"
-            value={receptId}
-            onChange={(e) => kiesRecept(e.target.value)}
-            className={selectClass}
-          >
-            <option value="">Geen — eigen titel hieronder</option>
-            {recepten.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.titel}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
       {recepten.length > 0 && receptId && (
         <div className="flex items-center justify-between gap-2 rounded-lg bg-primary/10 px-3 py-2">
           <span className="flex min-w-0 items-center gap-2 text-xs font-medium text-primary">
