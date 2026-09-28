@@ -65,7 +65,8 @@ export const NAV_SECTIES: NavSectie[] = [
       p.startsWith("/fotos") ||
       p.startsWith("/prikbord") ||
       p.startsWith("/verjaardagen") ||
-      p.startsWith("/klus-sjablonen"),
+      p.startsWith("/klus-sjablonen") ||
+      p.startsWith("/kijk-leeslijst"),
     subNav: [
       { to: "/gezin", label: "Gezin" },
       { to: "/prikbord", label: "Prikbord" },
@@ -73,6 +74,7 @@ export const NAV_SECTIES: NavSectie[] = [
       { to: "/verjaardagen", label: "Verjaardagen" },
       { to: "/verlanglijst", label: "Verlanglijst" },
       { to: "/klus-sjablonen", label: "Kluscatalogus" },
+      { to: "/kijk-leeslijst", label: "Kijk- & leeslijst" },
     ],
     standaardPad: "/gezin",
   },

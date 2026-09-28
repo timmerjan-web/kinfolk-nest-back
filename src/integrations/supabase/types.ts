@@ -400,6 +400,50 @@ export type Database = {
           },
         ]
       }
+      lijst_items: {
+        Row: {
+          afgerond: boolean
+          afgerond_door: string | null
+          created_at: string
+          gebruiker_id: string
+          gezin_id: string
+          id: string
+          notitie: string | null
+          soort: string
+          titel: string
+        }
+        Insert: {
+          afgerond?: boolean
+          afgerond_door?: string | null
+          created_at?: string
+          gebruiker_id: string
+          gezin_id: string
+          id?: string
+          notitie?: string | null
+          soort: string
+          titel: string
+        }
+        Update: {
+          afgerond?: boolean
+          afgerond_door?: string | null
+          created_at?: string
+          gebruiker_id?: string
+          gezin_id?: string
+          id?: string
+          notitie?: string | null
+          soort?: string
+          titel?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lijst_items_gezin_id_fkey"
+            columns: ["gezin_id"]
+            isOneToOne: false
+            referencedRelation: "gezinnen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meldingen: {
         Row: {
           created_at: string

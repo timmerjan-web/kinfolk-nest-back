@@ -16,6 +16,7 @@ import { Route as BoodschappenRouteImport } from './routes/boodschappen'
 import { Route as DeelOntvangenRouteImport } from './routes/deel-ontvangen'
 import { Route as FotosRouteImport } from './routes/fotos'
 import { Route as GezinRouteImport } from './routes/gezin'
+import { Route as KijkLeeslijstRouteImport } from './routes/kijk-leeslijst'
 import { Route as KlusSjablonenRouteImport } from './routes/klus-sjablonen'
 import { Route as KlusjesRouteImport } from './routes/klusjes'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
@@ -64,6 +65,11 @@ const FotosRoute = FotosRouteImport.update({
 const GezinRoute = GezinRouteImport.update({
   id: '/gezin',
   path: '/gezin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KijkLeeslijstRoute = KijkLeeslijstRouteImport.update({
+  id: '/kijk-leeslijst',
+  path: '/kijk-leeslijst',
   getParentRoute: () => rootRouteImport,
 } as any)
 const KlusSjablonenRoute = KlusSjablonenRouteImport.update({
@@ -146,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/deel-ontvangen': typeof DeelOntvangenRoute
   '/fotos': typeof FotosRoute
   '/gezin': typeof GezinRoute
+  '/kijk-leeslijst': typeof KijkLeeslijstRoute
   '/klus-sjablonen': typeof KlusSjablonenRoute
   '/klusjes': typeof KlusjesRoute
   '/onboarding': typeof OnboardingRoute
@@ -169,6 +176,7 @@ export interface FileRoutesByTo {
   '/deel-ontvangen': typeof DeelOntvangenRoute
   '/fotos': typeof FotosRoute
   '/gezin': typeof GezinRoute
+  '/kijk-leeslijst': typeof KijkLeeslijstRoute
   '/klus-sjablonen': typeof KlusSjablonenRoute
   '/klusjes': typeof KlusjesRoute
   '/onboarding': typeof OnboardingRoute
@@ -193,6 +201,7 @@ export interface FileRoutesById {
   '/deel-ontvangen': typeof DeelOntvangenRoute
   '/fotos': typeof FotosRoute
   '/gezin': typeof GezinRoute
+  '/kijk-leeslijst': typeof KijkLeeslijstRoute
   '/klus-sjablonen': typeof KlusSjablonenRoute
   '/klusjes': typeof KlusjesRoute
   '/onboarding': typeof OnboardingRoute
@@ -218,6 +227,7 @@ export interface FileRouteTypes {
     | '/deel-ontvangen'
     | '/fotos'
     | '/gezin'
+    | '/kijk-leeslijst'
     | '/klus-sjablonen'
     | '/klusjes'
     | '/onboarding'
@@ -241,6 +251,7 @@ export interface FileRouteTypes {
     | '/deel-ontvangen'
     | '/fotos'
     | '/gezin'
+    | '/kijk-leeslijst'
     | '/klus-sjablonen'
     | '/klusjes'
     | '/onboarding'
@@ -264,6 +275,7 @@ export interface FileRouteTypes {
     | '/deel-ontvangen'
     | '/fotos'
     | '/gezin'
+    | '/kijk-leeslijst'
     | '/klus-sjablonen'
     | '/klusjes'
     | '/onboarding'
@@ -288,6 +300,7 @@ export interface RootRouteChildren {
   DeelOntvangenRoute: typeof DeelOntvangenRoute
   FotosRoute: typeof FotosRoute
   GezinRoute: typeof GezinRoute
+  KijkLeeslijstRoute: typeof KijkLeeslijstRoute
   KlusSjablonenRoute: typeof KlusSjablonenRoute
   KlusjesRoute: typeof KlusjesRoute
   OnboardingRoute: typeof OnboardingRoute
@@ -353,6 +366,13 @@ declare module '@tanstack/react-router' {
       path: '/gezin'
       fullPath: '/gezin'
       preLoaderRoute: typeof GezinRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kijk-leeslijst': {
+      id: '/kijk-leeslijst'
+      path: '/kijk-leeslijst'
+      fullPath: '/kijk-leeslijst'
+      preLoaderRoute: typeof KijkLeeslijstRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/klus-sjablonen': {
@@ -464,6 +484,7 @@ const rootRouteChildren: RootRouteChildren = {
   DeelOntvangenRoute: DeelOntvangenRoute,
   FotosRoute: FotosRoute,
   GezinRoute: GezinRoute,
+  KijkLeeslijstRoute: KijkLeeslijstRoute,
   KlusSjablonenRoute: KlusSjablonenRoute,
   KlusjesRoute: KlusjesRoute,
   OnboardingRoute: OnboardingRoute,

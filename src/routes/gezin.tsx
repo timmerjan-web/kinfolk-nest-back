@@ -1,6 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { BookOpen, Camera, Copy, Gift, Heart, Pencil, StickyNote, UserPlus } from "lucide-react";
+import {
+  BookOpen,
+  Camera,
+  Copy,
+  Film,
+  Gift,
+  Heart,
+  Pencil,
+  StickyNote,
+  UserPlus,
+} from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, SectionCard } from "@/components/app-shell";
 import { RequireGezin } from "@/components/require-auth";
@@ -215,6 +225,13 @@ function GezinPage() {
           >
             <BookOpen className="h-5 w-5 text-muted-foreground" />
             <span className="text-[11px]">Klussencatalogus</span>
+          </Link>
+          <Link
+            to="/kijk-leeslijst"
+            className="flex min-h-12 flex-col items-center gap-1 rounded-lg py-3 text-center hover:bg-muted"
+          >
+            <Film className="h-5 w-5 text-muted-foreground" />
+            <span className="text-[11px]">Kijk- & leeslijst</span>
           </Link>
         </div>
       </SectionCard>
