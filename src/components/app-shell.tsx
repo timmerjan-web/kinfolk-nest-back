@@ -76,20 +76,16 @@ export function AppShell({
     <div className="min-h-screen bg-background pb-24">
       <header className="safe-top border-b border-border bg-card text-card-foreground">
         <div className="mx-auto max-w-2xl px-4 py-5 sm:px-5">
-          <div className="flex items-start justify-between gap-3">
-            <Link to={(terug ?? "/") as never} className="flex min-w-0 flex-1 items-center gap-3 text-foreground">
+          <div className="flex items-center justify-between gap-3">
+            <Link to={(terug ?? "/") as never} className="flex min-w-0 items-center gap-3 text-foreground">
               {terug ? (
                 <ChevronLeft className="h-8 w-8 shrink-0" aria-label="Terug" />
               ) : (
                 <GezinsappLogo className="h-10 w-10 shrink-0 text-primary" />
               )}
-              <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase text-secondary">
-                  Gezinsapp
-                </p>
-                <h1 className="font-display text-xl font-bold leading-tight text-primary break-words sm:text-2xl">{title}</h1>
-                {subtitle && <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>}
-              </div>
+              <p className="text-[10px] font-semibold uppercase text-secondary">
+                Gezinsapp
+              </p>
             </Link>
             <div className="flex shrink-0 items-center gap-2">
               {action}
