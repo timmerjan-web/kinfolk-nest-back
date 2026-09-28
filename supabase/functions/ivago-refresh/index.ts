@@ -27,6 +27,10 @@ const CORS_HEADERS = {
 // onbeperkt groeit, niet omdat oude data nog nuttig is.
 const BEWAAR_VANAF_DAGEN_TERUG = 7;
 
+// Rondes waarvan de kalender handmatig uit het IVAGO-agendabestand komt
+// (geldig t/m 2027-03-31); die niet overschrijven met de open dataset.
+const HANDMATIG_BEHEERDE_RONDES = new Set(["C1A"]);
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS_HEADERS });
 
@@ -70,6 +74,9 @@ Deno.serve(async (req) => {
     const ontbrekendeRondes: string[] = [];
 
     for (const ronde of rondes) {
+      // Handmatig ingeladen uit het officiële IVAGO-agendabestand — de
+      // open dataset bevat foute datums en zou die overschrijven.
+      if (HANDMATIG_BEHEERDE_RONDES.has(ronde)) continue;
       const perDatum = perRonde.get(ronde);
       if (!perDatum || perDatum.size === 0) {
         ontbrekendeRondes.push(ronde);
