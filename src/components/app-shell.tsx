@@ -87,7 +87,7 @@ export function AppShell({
                 <p className="text-[10px] font-semibold uppercase text-secondary">
                   Gezinsapp
                 </p>
-                <h1 className="font-display text-2xl font-bold leading-tight text-primary break-words">{title}</h1>
+                <h1 className="font-display text-xl font-bold leading-tight text-primary break-words sm:text-2xl">{title}</h1>
                 {subtitle && <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>}
               </div>
             </Link>
