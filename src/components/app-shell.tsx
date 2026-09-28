@@ -126,6 +126,8 @@ export function AppShell({
               </div>
             </div>
           </div>
+          <h1 className="mt-2 font-display text-2xl font-bold leading-tight text-primary">{title}</h1>
+          {subtitle && <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>}
         </div>
       </header>
 
